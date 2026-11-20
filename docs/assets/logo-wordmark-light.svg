@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 730 256" role="img" aria-labelledby="t">
+  <title id="t">shrink</title>
+  <g>
+    <path d="M186.2 93.7C226.2 53.7 176.2 -2.3 94.2 15.7" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
+    <path d="M185.5 80.4C207.5 54.4 191.5 16.4 141.5 6.4" fill="none" stroke="#FF7A56" stroke-width="4" stroke-linecap="round"/>
+    <path d="M110.4 92.4L119.5 106.2" stroke="#FF8B66" stroke-width="4" stroke-linecap="round"/>
+    <path d="M88.1 105.9L102.4 112.1" stroke="#FF8B66" stroke-width="4" stroke-linecap="round"/>
+    <path d="M75.7 127.7L90.3 125.9" stroke="#FF8B66" stroke-width="4" stroke-linecap="round"/>
+    <path d="M75.2 153.2L85.5 145" stroke="#FF8B66" stroke-width="4" stroke-linecap="round"/>
+    <path d="M84.9 174.8L89.2 164.2" stroke="#FF8B66" stroke-width="4" stroke-linecap="round"/>
+    <path d="M116.5 71A66 66 0 0 0 87.4 84" fill="none" stroke="#FF6A48" stroke-width="42"/>
+    <path d="M84.7 86.2A66 66 0 0 0 67.2 110.2" fill="none" stroke="#FF7A56" stroke-width="36"/>
+    <path d="M66 113.4A66 66 0 0 0 62.2 140.6" fill="none" stroke="#FF8B66" stroke-width="30"/>
+    <path d="M62.5 144A66 66 0 0 0 70.3 168" fill="none" stroke="#FF9C77" stroke-width="25"/>
+    <path d="M72 171A66 66 0 0 0 87.4 188" fill="none" stroke="#FFAD89" stroke-width="20"/>
+    <path d="M90.1 190.1A66 66 0 0 0 107.6 198.8" fill="none" stroke="#FFBE9C" stroke-width="15"/>
+    <ellipse cx="118.8" cy="194.9" rx="15" ry="7" fill="#FFBE9C" transform="rotate(-16 118.8 194.9)"/>
+    <ellipse cx="120.3" cy="202.9" rx="17" ry="7" fill="#FFCDB0" transform="rotate(18 120.3 202.9)"/>
+    <ellipse cx="114.4" cy="208.5" rx="15" ry="7" fill="#FFBE9C" transform="rotate(52 114.4 208.5)"/>
+    <path d="M120 70.5A66 66 0 0 1 180 95.4" fill="none" stroke="#FF5A3C" stroke-width="50"/>
+    <circle cx="180" cy="95.4" r="25.0" fill="#FF5A3C"/>
+    <path d="M194.3 91.3L204.6 120.9L181.1 100.2Z" fill="#FF5A3C" stroke="#FF5A3C" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="171.1" cy="72.2" r="9" fill="#FFFFFF"/>
+    <circle cx="173.1" cy="71.2" r="5" fill="#1F2328"/>
+    <circle cx="174.6" cy="69.2" r="1.6" fill="#FFFFFF"/>
+  </g>
+  <text x="262" y="150" fill="#1F2328" font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace" font-size="104" font-weight="700" textLength="366" lengthAdjust="spacingAndGlyphs">shrink</text>
+  <rect x="652" y="76" width="38" height="80" rx="4" fill="#FF5A3C"/>
+  <text x="264" y="196" fill="#59636E" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" textLength="414" lengthAdjust="spacingAndGlyphs">fewer tokens, same meaning</text>
+</svg>
