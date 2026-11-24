@@ -1,0 +1,5 @@
+# Keep LF in the repository and working tree on every OS, so outputs are byte-identical.
+* text=auto eol=lf
+
+# Fixtures are compared byte-for-byte: never touch their line endings.
+tests/fixtures/** -text
