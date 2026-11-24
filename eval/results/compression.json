@@ -1,0 +1,1329 @@
+{
+ "python": {
+  "stdlib/argparse.py": {
+   "original": {
+    "tokens": 20129,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 16619,
+    "valid": true,
+    "ms": 146.31999999983236
+   },
+   "shrink L2": {
+    "tokens": 14917,
+    "valid": true,
+    "ms": 485.29379999945377
+   },
+   "shrink L3": {
+    "tokens": 2727,
+    "valid": true,
+    "ms": 615.9403999999995
+   },
+   "repomix --compress": {
+    "tokens": 10860,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 5117,
+    "valid": true,
+    "ms": 5699.236999999812,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 2126,
+    "valid": false,
+    "ms": 2802.9029999997874,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/dataclasses.py": {
+   "original": {
+    "tokens": 14636,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 8012,
+    "valid": true,
+    "ms": 84.397299999182
+   },
+   "shrink L2": {
+    "tokens": 7142,
+    "valid": true,
+    "ms": 247.2290999994584
+   },
+   "shrink L3": {
+    "tokens": 1640,
+    "valid": true,
+    "ms": 291.4920000002894
+   },
+   "repomix --compress": {
+    "tokens": 9172,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 4968,
+    "valid": true,
+    "ms": 2687.3760999997103,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 1853,
+    "valid": false,
+    "ms": 2614.3058999996356,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/textwrap.py": {
+   "original": {
+    "tokens": 4429,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3553,
+    "valid": true,
+    "ms": 20.37650000056601
+   },
+   "shrink L2": {
+    "tokens": 2095,
+    "valid": true,
+    "ms": 58.357799999612325
+   },
+   "shrink L3": {
+    "tokens": 854,
+    "valid": true,
+    "ms": 91.2850000004255
+   },
+   "repomix --compress": {
+    "tokens": 3269,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1565,
+    "valid": true,
+    "ms": 3013.3165000006557,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 205,
+    "valid": false,
+    "ms": 2521.4311999998245,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/shlex.py": {
+   "original": {
+    "tokens": 2806,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 2494,
+    "valid": true,
+    "ms": 23.166899999523594
+   },
+   "shrink L2": {
+    "tokens": 2494,
+    "valid": true,
+    "ms": 72.3613000000114
+   },
+   "shrink L3": {
+    "tokens": 433,
+    "valid": true,
+    "ms": 93.80319999945641
+   },
+   "repomix --compress": {
+    "tokens": 951,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 420,
+    "valid": true,
+    "ms": 2706.5787999999884,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 121,
+    "valid": false,
+    "ms": 2616.8070000003354,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/fnmatch.py": {
+   "original": {
+    "tokens": 1419,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1209,
+    "valid": true,
+    "ms": 9.999799999604875
+   },
+   "shrink L2": {
+    "tokens": 998,
+    "valid": true,
+    "ms": 34.349900000052
+   },
+   "shrink L3": {
+    "tokens": 151,
+    "valid": true,
+    "ms": 44.58900000008725
+   },
+   "repomix --compress": {
+    "tokens": 883,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 185,
+    "valid": true,
+    "ms": 2635.3745999995226,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 33,
+    "valid": false,
+    "ms": 2493.3490000003076,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/json/decoder.py": {
+   "original": {
+    "tokens": 3076,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 2889,
+    "valid": true,
+    "ms": 18.947499999740103
+   },
+   "shrink L2": {
+    "tokens": 2171,
+    "valid": true,
+    "ms": 62.7970000005007
+   },
+   "shrink L3": {
+    "tokens": 609,
+    "valid": true,
+    "ms": 82.6654000002236
+   },
+   "repomix --compress": {
+    "tokens": 1751,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 767,
+    "valid": true,
+    "ms": 2618.7087999996947,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 184,
+    "valid": false,
+    "ms": 2661.929599999894,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/json/encoder.py": {
+   "original": {
+    "tokens": 3466,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3148,
+    "valid": true,
+    "ms": 19.594800000049872
+   },
+   "shrink L2": {
+    "tokens": 2396,
+    "valid": true,
+    "ms": 68.23569999960455
+   },
+   "shrink L3": {
+    "tokens": 618,
+    "valid": true,
+    "ms": 88.26829999998154
+   },
+   "repomix --compress": {
+    "tokens": 1818,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 758,
+    "valid": true,
+    "ms": 2891.5790000000925,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 304,
+    "valid": false,
+    "ms": 2566.782500000045,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/json/__init__.py": {
+   "original": {
+    "tokens": 3653,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3525,
+    "valid": true,
+    "ms": 11.583900000005087
+   },
+   "shrink L2": {
+    "tokens": 1214,
+    "valid": true,
+    "ms": 26.532500000030268
+   },
+   "shrink L3": {
+    "tokens": 452,
+    "valid": true,
+    "ms": 36.168499999803316
+   },
+   "repomix --compress": {
+    "tokens": 2732,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1191,
+    "valid": true,
+    "ms": 2808.5363999998663,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 159,
+    "valid": false,
+    "ms": 2554.9551000003703,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/functools.py": {
+   "original": {
+    "tokens": 8419,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 7101,
+    "valid": true,
+    "ms": 52.82650000026479
+   },
+   "shrink L2": {
+    "tokens": 6115,
+    "valid": true,
+    "ms": 171.1563999997452
+   },
+   "shrink L3": {
+    "tokens": 1704,
+    "valid": true,
+    "ms": 230.11769999993703
+   },
+   "repomix --compress": {
+    "tokens": 4902,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1646,
+    "valid": true,
+    "ms": 2813.020000000506,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 692,
+    "valid": false,
+    "ms": 2535.186199999771,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "stdlib/enum.py": {
+   "original": {
+    "tokens": 17722,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 15207,
+    "valid": true,
+    "ms": 129.052799999954
+   },
+   "shrink L2": {
+    "tokens": 13901,
+    "valid": true,
+    "ms": 391.0816999996314
+   },
+   "shrink L3": {
+    "tokens": 2614,
+    "valid": true,
+    "ms": 514.7303000003376
+   },
+   "repomix --compress": {
+    "tokens": 8408,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 2724,
+    "valid": true,
+    "ms": 2854.96349999994,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 1128,
+    "valid": false,
+    "ms": 2642.4144999991768,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/cli.py": {
+   "original": {
+    "tokens": 3007,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3005,
+    "valid": true,
+    "ms": 20.44949999981327
+   },
+   "shrink L2": {
+    "tokens": 2772,
+    "valid": true,
+    "ms": 69.06989999970392
+   },
+   "shrink L3": {
+    "tokens": 1615,
+    "valid": true,
+    "ms": 113.60639999929845
+   },
+   "repomix --compress": {
+    "tokens": 901,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1573,
+    "valid": true,
+    "ms": 2658.709600000293,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 379,
+    "valid": false,
+    "ms": 2773.810599999706,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/auto.py": {
+   "original": {
+    "tokens": 812,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 794,
+    "valid": true,
+    "ms": 4.828699999961827
+   },
+   "shrink L2": {
+    "tokens": 794,
+    "valid": true,
+    "ms": 15.791900000294845
+   },
+   "shrink L3": {
+    "tokens": 478,
+    "valid": true,
+    "ms": 26.6697999995813
+   },
+   "repomix --compress": {
+    "tokens": 327,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 490,
+    "valid": true,
+    "ms": 2593.011199999637,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 95,
+    "valid": false,
+    "ms": 2727.873400000135,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/chain.py": {
+   "original": {
+    "tokens": 347,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 347,
+    "valid": true,
+    "ms": 2.6221999996778322
+   },
+   "shrink L2": {
+    "tokens": 304,
+    "valid": true,
+    "ms": 9.41419999981008
+   },
+   "shrink L3": {
+    "tokens": 128,
+    "valid": true,
+    "ms": 12.287999999898602
+   },
+   "repomix --compress": {
+    "tokens": 203,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 174,
+    "valid": true,
+    "ms": 2618.70159999944,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 48,
+    "valid": false,
+    "ms": 2715.3863000003184,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/json_mode.py": {
+   "original": {
+    "tokens": 1420,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1336,
+    "valid": true,
+    "ms": 9.97300000017276
+   },
+   "shrink L2": {
+    "tokens": 1253,
+    "valid": true,
+    "ms": 35.02719999960391
+   },
+   "shrink L3": {
+    "tokens": 619,
+    "valid": true,
+    "ms": 49.13029999988794
+   },
+   "repomix --compress": {
+    "tokens": 846,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 698,
+    "valid": true,
+    "ms": 2690.8604999998715,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 160,
+    "valid": false,
+    "ms": 2702.397199999723,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/log.py": {
+   "original": {
+    "tokens": 1903,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1811,
+    "valid": true,
+    "ms": 15.00820000001113
+   },
+   "shrink L2": {
+    "tokens": 1746,
+    "valid": true,
+    "ms": 56.26289999963774
+   },
+   "shrink L3": {
+    "tokens": 806,
+    "valid": true,
+    "ms": 59.301199999936216
+   },
+   "repomix --compress": {
+    "tokens": 1129,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 870,
+    "valid": true,
+    "ms": 3472.3717999995642,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 145,
+    "valid": false,
+    "ms": 2661.37179999987,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/python_code.py": {
+   "original": {
+    "tokens": 3241,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3125,
+    "valid": true,
+    "ms": 35.69599999991624
+   },
+   "shrink L2": {
+    "tokens": 2928,
+    "valid": true,
+    "ms": 81.378500000028
+   },
+   "shrink L3": {
+    "tokens": 1245,
+    "valid": true,
+    "ms": 145.28239999981452
+   },
+   "repomix --compress": {
+    "tokens": 1739,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1288,
+    "valid": true,
+    "ms": 2813.7040999999954,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 495,
+    "valid": false,
+    "ms": 2980.8630000006815,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/registry.py": {
+   "original": {
+    "tokens": 736,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 728,
+    "valid": true,
+    "ms": 4.997099999854981
+   },
+   "shrink L2": {
+    "tokens": 657,
+    "valid": true,
+    "ms": 15.02390000041487
+   },
+   "shrink L3": {
+    "tokens": 441,
+    "valid": true,
+    "ms": 25.732199999765726
+   },
+   "repomix --compress": {
+    "tokens": 337,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 511,
+    "valid": true,
+    "ms": 2800.8184000000256,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 84,
+    "valid": false,
+    "ms": 2807.8190000005634,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/text.py": {
+   "original": {
+    "tokens": 2227,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 2099,
+    "valid": true,
+    "ms": 16.325099999448867
+   },
+   "shrink L2": {
+    "tokens": 2008,
+    "valid": true,
+    "ms": 55.017700000462355
+   },
+   "shrink L3": {
+    "tokens": 1026,
+    "valid": true,
+    "ms": 79.11710000007588
+   },
+   "repomix --compress": {
+    "tokens": 1352,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 1156,
+    "valid": true,
+    "ms": 3158.777100000407,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 266,
+    "valid": false,
+    "ms": 2956.663599999956,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/compressors/translate.py": {
+   "original": {
+    "tokens": 4118,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 3853,
+    "valid": true,
+    "ms": 27.93130000009114
+   },
+   "shrink L2": {
+    "tokens": 3637,
+    "valid": true,
+    "ms": 87.66999999988911
+   },
+   "shrink L3": {
+    "tokens": 2058,
+    "valid": true,
+    "ms": 132.59170000037557
+   },
+   "repomix --compress": {
+    "tokens": 1929,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 2428,
+    "valid": true,
+    "ms": 2924.5759999994334,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 411,
+    "valid": false,
+    "ms": 2893.9565000000584,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/integrations/adapters.py": {
+   "original": {
+    "tokens": 1482,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1451,
+    "valid": true,
+    "ms": 12.404699999933655
+   },
+   "shrink L2": {
+    "tokens": 1285,
+    "valid": true,
+    "ms": 39.66729999956442
+   },
+   "shrink L3": {
+    "tokens": 323,
+    "valid": true,
+    "ms": 59.25569999999425
+   },
+   "repomix --compress": {
+    "tokens": 653,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 487,
+    "valid": true,
+    "ms": 2758.960400000433,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 181,
+    "valid": false,
+    "ms": 2969.5881999996345,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/integrations/commands.py": {
+   "original": {
+    "tokens": 1896,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1871,
+    "valid": true,
+    "ms": 13.272299999698589
+   },
+   "shrink L2": {
+    "tokens": 1687,
+    "valid": true,
+    "ms": 41.892100000040955
+   },
+   "shrink L3": {
+    "tokens": 803,
+    "valid": true,
+    "ms": 69.3647999996756
+   },
+   "repomix --compress": {
+    "tokens": 901,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 828,
+    "valid": true,
+    "ms": 2720.3181000004406,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 169,
+    "valid": false,
+    "ms": 3028.9769999999407,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/integrations/gain.py": {
+   "original": {
+    "tokens": 990,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 990,
+    "valid": true,
+    "ms": 10.500999999749183
+   },
+   "shrink L2": {
+    "tokens": 948,
+    "valid": true,
+    "ms": 28.071900000213645
+   },
+   "shrink L3": {
+    "tokens": 280,
+    "valid": true,
+    "ms": 44.969900000069174
+   },
+   "repomix --compress": {
+    "tokens": 344,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 321,
+    "valid": true,
+    "ms": 2812.3224000000846,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 126,
+    "valid": false,
+    "ms": 3127.245500000754,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/integrations/proxy.py": {
+   "original": {
+    "tokens": 1882,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1794,
+    "valid": true,
+    "ms": 18.11730000008538
+   },
+   "shrink L2": {
+    "tokens": 1633,
+    "valid": true,
+    "ms": 50.783700000465615
+   },
+   "shrink L3": {
+    "tokens": 540,
+    "valid": true,
+    "ms": 72.74120000056428
+   },
+   "repomix --compress": {
+    "tokens": 884,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 790,
+    "valid": true,
+    "ms": 2831.773400000202,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 276,
+    "valid": false,
+    "ms": 2882.3141999992004,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/integrations/shrinker.py": {
+   "original": {
+    "tokens": 954,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 929,
+    "valid": true,
+    "ms": 8.732400000553753
+   },
+   "shrink L2": {
+    "tokens": 867,
+    "valid": true,
+    "ms": 28.06830000008631
+   },
+   "shrink L3": {
+    "tokens": 303,
+    "valid": true,
+    "ms": 42.18739999942045
+   },
+   "repomix --compress": {
+    "tokens": 440,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 358,
+    "valid": true,
+    "ms": 2733.152699999664,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 161,
+    "valid": false,
+    "ms": 2896.9316000002436,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/models.py": {
+   "original": {
+    "tokens": 1059,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1048,
+    "valid": true,
+    "ms": 8.784800000285031
+   },
+   "shrink L2": {
+    "tokens": 975,
+    "valid": true,
+    "ms": 22.851499999887892
+   },
+   "shrink L3": {
+    "tokens": 575,
+    "valid": true,
+    "ms": 39.61699999945267
+   },
+   "repomix --compress": {
+    "tokens": 452,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 652,
+    "valid": true,
+    "ms": 3064.49800000064,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 73,
+    "valid": false,
+    "ms": 2896.8363999993016,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/observability/diff.py": {
+   "original": {
+    "tokens": 474,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 463,
+    "valid": true,
+    "ms": 3.188100000443228
+   },
+   "shrink L2": {
+    "tokens": 406,
+    "valid": true,
+    "ms": 11.386600000150793
+   },
+   "shrink L3": {
+    "tokens": 202,
+    "valid": true,
+    "ms": 17.796899999666493
+   },
+   "repomix --compress": {
+    "tokens": 255,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 275,
+    "valid": true,
+    "ms": 3464.089199999762,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 79,
+    "valid": false,
+    "ms": 3093.7030000004597,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/observability/stats.py": {
+   "original": {
+    "tokens": 2482,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 2393,
+    "valid": true,
+    "ms": 19.649200000458222
+   },
+   "shrink L2": {
+    "tokens": 2300,
+    "valid": true,
+    "ms": 67.02299999960815
+   },
+   "shrink L3": {
+    "tokens": 748,
+    "valid": true,
+    "ms": 94.0904999997656
+   },
+   "repomix --compress": {
+    "tokens": 1198,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 788,
+    "valid": true,
+    "ms": 3097.9817999996158,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 332,
+    "valid": false,
+    "ms": 2654.4657999993433,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/pipeline.py": {
+   "original": {
+    "tokens": 881,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 858,
+    "valid": true,
+    "ms": 7.519599999795901
+   },
+   "shrink L2": {
+    "tokens": 801,
+    "valid": true,
+    "ms": 26.183100000707782
+   },
+   "shrink L3": {
+    "tokens": 376,
+    "valid": true,
+    "ms": 39.01540000060777
+   },
+   "repomix --compress": {
+    "tokens": 412,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 417,
+    "valid": true,
+    "ms": 4533.180600000378,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 223,
+    "valid": false,
+    "ms": 2654.6500000004016,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/retrieval/bm25.py": {
+   "original": {
+    "tokens": 660,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 660,
+    "valid": true,
+    "ms": 5.326599999534665
+   },
+   "shrink L2": {
+    "tokens": 579,
+    "valid": true,
+    "ms": 19.91730000008829
+   },
+   "shrink L3": {
+    "tokens": 285,
+    "valid": true,
+    "ms": 27.49989999938407
+   },
+   "repomix --compress": {
+    "tokens": 338,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 369,
+    "valid": true,
+    "ms": 3705.6714999998803,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 37,
+    "valid": false,
+    "ms": 2692.1285999997053,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/retrieval/planner.py": {
+   "original": {
+    "tokens": 1519,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1450,
+    "valid": true,
+    "ms": 14.699800000016694
+   },
+   "shrink L2": {
+    "tokens": 1253,
+    "valid": true,
+    "ms": 42.82619999958115
+   },
+   "shrink L3": {
+    "tokens": 376,
+    "valid": true,
+    "ms": 60.48740000005637
+   },
+   "repomix --compress": {
+    "tokens": 776,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 618,
+    "valid": true,
+    "ms": 2845.4466000002867,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 174,
+    "valid": false,
+    "ms": 2777.4890999999116,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/splitting/formats.py": {
+   "original": {
+    "tokens": 1780,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 1766,
+    "valid": true,
+    "ms": 14.341099999910512
+   },
+   "shrink L2": {
+    "tokens": 1644,
+    "valid": true,
+    "ms": 44.516299999486364
+   },
+   "shrink L3": {
+    "tokens": 928,
+    "valid": true,
+    "ms": 83.0537000001641
+   },
+   "repomix --compress": {
+    "tokens": 961,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 984,
+    "valid": true,
+    "ms": 2817.209599999842,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 188,
+    "valid": false,
+    "ms": 2866.9277999997576,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/splitting/framed.py": {
+   "original": {
+    "tokens": 1047,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 982,
+    "valid": true,
+    "ms": 7.839300000341609
+   },
+   "shrink L2": {
+    "tokens": 798,
+    "valid": true,
+    "ms": 24.613899999167188
+   },
+   "shrink L3": {
+    "tokens": 363,
+    "valid": true,
+    "ms": 35.743899999943096
+   },
+   "repomix --compress": {
+    "tokens": 767,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 563,
+    "valid": true,
+    "ms": 2908.5955999998987,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 133,
+    "valid": false,
+    "ms": 2700.894900000094,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  },
+  "shrink/validation.py": {
+   "original": {
+    "tokens": 601,
+    "valid": true,
+    "ms": 0.0
+   },
+   "shrink L1": {
+    "tokens": 600,
+    "valid": true,
+    "ms": 4.4384000002537505
+   },
+   "shrink L2": {
+    "tokens": 488,
+    "valid": true,
+    "ms": 13.90579999952024
+   },
+   "shrink L3": {
+    "tokens": 209,
+    "valid": true,
+    "ms": 25.42840000023716
+   },
+   "repomix --compress": {
+    "tokens": 337,
+    "valid": false,
+    "ms": 560.0478515151542
+   },
+   "skim structure": {
+    "tokens": 313,
+    "valid": true,
+    "ms": 2563.158299999486,
+    "notice": "[skim] structure view: bodies removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   },
+   "skim signatures": {
+    "tokens": 116,
+    "valid": false,
+    "ms": 2819.809699999496,
+    "notice": "[skim] signatures view: all but signatures removed \u2014 SKIM_PASSTHROUGH=1 for full output"
+   }
+  }
+ },
+ "other": {
+  "README.md (uk)": {
+   "kind": "text",
+   "original": 5808,
+   "L1": 5808,
+   "L2": 5808,
+   "L3": 5654
+  },
+  "docs/PLAN.md (uk)": {
+   "kind": "text",
+   "original": 5222,
+   "L1": 5222,
+   "L2": 5222,
+   "L3": 4795
+  },
+  "messy.md": {
+   "kind": "text",
+   "original": 175,
+   "L1": 173,
+   "L2": 135,
+   "L3": 56
+  },
+  "pytest.log": {
+   "kind": "log",
+   "original": 5244,
+   "L1": 3248,
+   "L2": 3248,
+   "L3": 3248
+  },
+  "packages.json": {
+   "kind": "json",
+   "original": 4295,
+   "L1": 3345,
+   "L2": 291,
+   "L3": 70
+  }
+ },
+ "env": "Python 3.12.10"
+}

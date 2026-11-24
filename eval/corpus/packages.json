@@ -1,0 +1,420 @@
+{
+  "generated_by": "importlib.metadata in the shrink dev environment",
+  "count": 32,
+  "packages": [
+    {
+      "name": "ast_serialize",
+      "version": "0.13.1",
+      "summary": "Python bindings for mypy AST serialization",
+      "license": "MIT",
+      "requires_python": ">=3.7",
+      "requires": [],
+      "files": 12
+    },
+    {
+      "name": "certifi",
+      "version": "2026.11.20",
+      "summary": "Python package for providing Mozilla's CA Bundle.",
+      "license": "MPL-2.0",
+      "requires_python": ">=3.7",
+      "requires": [],
+      "files": 18
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "summary": "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet.",
+      "license": "MIT",
+      "requires_python": ">=3.7",
+      "requires": [],
+      "files": 35
+    },
+    {
+      "name": "click",
+      "version": "8.5.1",
+      "summary": "Composable command line interface toolkit",
+      "license": "BSD-3-Clause",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 40
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6",
+      "summary": "Cross-platform colored terminal text.",
+      "license": "",
+      "requires_python": "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7",
+      "requires": [],
+      "files": 31
+    },
+    {
+      "name": "coverage",
+      "version": "7.17.2",
+      "summary": "Code coverage measurement for Python",
+      "license": "Apache-2.0",
+      "requires_python": ">=3.11",
+      "requires": [],
+      "files": 110
+    },
+    {
+      "name": "ctranslate2",
+      "version": "4.9.0",
+      "summary": "Fast inference engine for Transformer models",
+      "license": "MIT",
+      "requires_python": ">=3.9",
+      "requires": [
+        "numpy",
+        "pyyaml<7,>=5.3"
+      ],
+      "files": 72
+    },
+    {
+      "name": "fasttext-predict",
+      "version": "0.9.2.4",
+      "summary": "fasttext with wheels and no external dependency, but only the predict method (<1MB)",
+      "license": "MIT",
+      "requires_python": "",
+      "requires": [],
+      "files": 12
+    },
+    {
+      "name": "hypothesis",
+      "version": "6.170.15",
+      "summary": "The property-based testing library for Python",
+      "license": "MPL-2.0",
+      "requires_python": ">=3.11",
+      "requires": [
+        "black>=20.8b0 ; extra == 'all'",
+        "black>=20.8b0 ; extra == 'cli'",
+        "black>=20.8b0 ; extra == 'ghostwriter'",
+        "click>=7.0 ; extra == 'all'",
+        "click>=7.0 ; extra == 'cli'",
+        "crosshair-tool>=0.0.112 ; extra == 'all'",
+        "crosshair-tool>=0.0.112 ; extra == 'crosshair'",
+        "django>=5.2 ; extra == 'all'",
+        "django>=5.2 ; extra == 'django'",
+        "dpcontracts>=0.4 ; extra == 'all'",
+        "dpcontracts>=0.4 ; extra == 'dpcontracts'",
+        "hypothesis-crosshair>=0.0.31 ; extra == 'all'",
+        "hypothesis-crosshair>=0.0.31 ; extra == 'crosshair'",
+        "lark>=0.10.1 ; extra == 'all'",
+        "lark>=0.10.1 ; extra == 'lark'",
+        "libcst>=0.3.16 ; extra == 'all'",
+        "libcst>=0.3.16 ; extra == 'codemods'",
+        "numpy>=1.23.2 ; extra == 'all'",
+        "numpy>=1.23.2 ; extra == 'numpy'",
+        "pandas>=1.5 ; extra == 'all'",
+        "pandas>=1.5 ; extra == 'pandas'",
+        "pytest>=4.6 ; extra == 'all'",
+        "pytest>=4.6 ; extra == 'pytest'",
+        "python-dateutil>=1.4 ; extra == 'all'",
+        "python-dateutil>=1.4 ; extra == 'dateutil'",
+        "pytz>=2014.1 ; extra == 'all'",
+        "pytz>=2014.1 ; extra == 'pytz'",
+        "redis>=3.0.0 ; extra == 'all'",
+        "redis>=3.0.0 ; extra == 'redis'",
+        "rich>=9.0.0 ; extra == 'all'",
+        "rich>=9.0.0 ; extra == 'cli'",
+        "sortedcontainers>=2.1.0,<3.0.0",
+        "tzdata>=2026.5 ; (sys_platform == 'emscripten' and extra == 'all') or (sys_platform == 'win32' and extra == 'all')",
+        "tzdata>=2026.5 ; (sys_platform == 'emscripten' and extra == 'zoneinfo') or (sys_platform == 'win32' and extra == 'zoneinfo')",
+        "watchdog>=4.0.0 ; extra == 'all'",
+        "watchdog>=4.0.0 ; extra == 'watchdog'"
+      ],
+      "files": 224
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "summary": "Internationalized Domain Names in Applications (IDNA)",
+      "license": "BSD-3-Clause",
+      "requires_python": ">=3.9",
+      "requires": [
+        "coverage >= 7.10.0 ; extra == \"all\"",
+        "hypothesis >= 6.141.1 ; extra == \"all\"",
+        "mypy >= 1.11.2 ; extra == \"all\"",
+        "pytest >= 8.3.2 ; extra == \"all\"",
+        "ruff >= 0.16.0 ; extra == \"all\"",
+        "ty >= 0.0.37 ; extra == \"all\""
+      ],
+      "files": 28
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "summary": "brain-dead simple config-ini parsing",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 15
+    },
+    {
+      "name": "librt",
+      "version": "0.16.0",
+      "summary": "Mypyc runtime library",
+      "license": "MIT",
+      "requires_python": ">=3.9",
+      "requires": [],
+      "files": 22
+    },
+    {
+      "name": "mypy",
+      "version": "2.4.1",
+      "summary": "Optional static typing for Python",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [
+        "ast-serialize<1.0.0,>=0.12.1",
+        "librt>=0.16.0; platform_python_implementation != \"PyPy\"",
+        "lxml; extra == \"reports\"",
+        "mypy_extensions>=1.0.0",
+        "orjson; extra == \"faster-cache\"",
+        "pathspec>=1.0.0",
+        "pip; extra == \"install-types\"",
+        "psutil>=4.0; extra == \"dmypy\"",
+        "setuptools>=50; extra == \"mypyc\"",
+        "tomli>=1.1.0; python_version < \"3.11\"",
+        "typing_extensions>=4.14.0; python_version >= \"3.15\"",
+        "typing_extensions>=4.6.0; python_version < \"3.15\""
+      ],
+      "files": 1814
+    },
+    {
+      "name": "mypy_extensions",
+      "version": "1.2.0",
+      "summary": "Type system extensions for programs checked with the mypy type checker.",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 7
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.5",
+      "summary": "Fundamental package for array computing in Python",
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+      "requires_python": ">=3.12",
+      "requires": [],
+      "files": 1355
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "summary": "Core utilities for Python packages",
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "requires_python": ">=3.9",
+      "requires": [],
+      "files": 52
+    },
+    {
+      "name": "pathspec",
+      "version": "1.1.1",
+      "summary": "Utility library for gitignore style pattern matching of file paths.",
+      "license": "",
+      "requires_python": ">=3.9",
+      "requires": [
+        "google-re2 >=1.1 ; extra == \"re2\"",
+        "hyperscan >=0.7 ; extra == \"hyperscan\"",
+        "typing-extensions >=4 ; extra == \"optional\""
+      ],
+      "files": 68
+    },
+    {
+      "name": "pip",
+      "version": "26.3",
+      "summary": "The PyPA recommended tool for installing Python packages.",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 959
+    },
+    {
+      "name": "pluggy",
+      "version": "1.7.0",
+      "summary": "plugin and hook calling mechanisms for python",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 33
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "summary": "Pygments is a syntax highlighting package written in Python.",
+      "license": "BSD-2-Clause",
+      "requires_python": ">=3.9",
+      "requires": [
+        "colorama>=0.4.6; extra == 'windows-terminal'"
+      ],
+      "files": 694
+    },
+    {
+      "name": "pytest",
+      "version": "9.2.0",
+      "summary": "pytest: simple powerful testing with Python",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [
+        "argcomplete; extra == \"dev\"",
+        "asynctest; python_version < \"3.11\" and extra == \"dev\"",
+        "attrs>=23.1; extra == \"dev\"",
+        "colorama>=0.4; sys_platform == \"win32\"",
+        "coverage>=7.5; extra == \"dev\"",
+        "exceptiongroup>=1; python_version < \"3.11\"",
+        "hypothesis>=6.75; extra == \"dev\"",
+        "iniconfig>=2",
+        "mock; extra == \"dev\"",
+        "numpy>=1.26; extra == \"dev\"",
+        "packaging>=24",
+        "pexpect>=4.9; extra == \"dev\"",
+        "pluggy<2,>=1.6",
+        "pygments>=2.15",
+        "pytest-xdist>=3.5; extra == \"dev\"",
+        "pyyaml; extra == \"dev\"",
+        "requests; extra == \"dev\"",
+        "setuptools; extra == \"dev\"",
+        "tomli>=2; python_version < \"3.11\"",
+        "xmlschema; extra == \"dev\""
+      ],
+      "files": 175
+    },
+    {
+      "name": "pytest-cov",
+      "version": "7.1.0",
+      "summary": "Pytest plugin for measuring coverage.",
+      "license": "MIT",
+      "requires_python": ">=3.9",
+      "requires": [
+        "coverage[toml]>=7.10.6",
+        "pluggy>=1.2",
+        "process-tests; extra == 'testing'",
+        "pytest-xdist; extra == 'testing'",
+        "pytest>=7",
+        "virtualenv; extra == 'testing'"
+      ],
+      "files": 13
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.4",
+      "summary": "YAML parser and emitter for Python",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [],
+      "files": 43
+    },
+    {
+      "name": "regex",
+      "version": "2026.11.19",
+      "summary": "Alternative regular expression module, to replace re.",
+      "license": "Apache-2.0 AND CNRI-Python",
+      "requires_python": ">=3.11",
+      "requires": [],
+      "files": 15
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "summary": "Python HTTP for Humans.",
+      "license": "Apache-2.0",
+      "requires_python": ">=3.10",
+      "requires": [
+        "PySocks!=1.5.7,>=1.5.6; extra == \"socks\"",
+        "certifi>=2023.5.7",
+        "chardet<8,>=3.0.2; extra == \"use-chardet-on-py3\"",
+        "charset_normalizer<4,>=2",
+        "idna<4,>=2.5",
+        "urllib3<3,>=1.26"
+      ],
+      "files": 46
+    },
+    {
+      "name": "ruff",
+      "version": "0.17.4",
+      "summary": "An extremely fast Python linter and code formatter, written in Rust.",
+      "license": "MIT",
+      "requires_python": ">=3.7",
+      "requires": [],
+      "files": 13
+    },
+    {
+      "name": "sentencepiece",
+      "version": "0.2.3",
+      "summary": "Unsupervised text tokenizer and detokenizer.",
+      "license": "Apache-2.0",
+      "requires_python": ">=3.10",
+      "requires": [
+        "numpy; extra == \"numpy\"",
+        "numpy; extra == \"test\"",
+        "protobuf; extra == \"protobuf\"",
+        "protobuf; extra == \"test\"",
+        "pytest; extra == \"test\""
+      ],
+      "files": 25
+    },
+    {
+      "name": "shrink",
+      "version": "0.1.0",
+      "summary": "Stateless Unix filter that compresses code and text for LLM context: stdin in, stdout out.",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [
+        "click>=8.1",
+        "hypothesis>=6.100; extra == 'dev'",
+        "mypy>=1.10; extra == 'dev'",
+        "pytest-cov>=5; extra == 'dev'",
+        "pytest>=8; extra == 'dev'",
+        "ruff>=0.6; extra == 'dev'",
+        "tiktoken>=0.7; extra == 'all'",
+        "tiktoken>=0.7; extra == 'tokens'"
+      ],
+      "files": 9
+    },
+    {
+      "name": "sortedcontainers",
+      "version": "2.4.0",
+      "summary": "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set",
+      "license": "Apache 2.0",
+      "requires_python": "",
+      "requires": [],
+      "files": 14
+    },
+    {
+      "name": "tiktoken",
+      "version": "0.14.0",
+      "summary": "tiktoken is a fast BPE tokeniser for use with OpenAI's models",
+      "license": "MIT License\n\nCopyright (c) 2022 OpenAI, Shantanu Jain\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+      "requires_python": ">=3.9",
+      "requires": [
+        "blobfile>=3; extra == \"blobfile\"",
+        "regex",
+        "requests"
+      ],
+      "files": 23
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "summary": "Backported and Experimental Type Hints for Python 3.9+",
+      "license": "PSF-2.0",
+      "requires_python": ">=3.9",
+      "requires": [],
+      "files": 7
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "summary": "HTTP library with thread-safe connection pooling, file post, and more.",
+      "license": "MIT",
+      "requires_python": ">=3.10",
+      "requires": [
+        "backports-zstd>=1.0.0; (python_version < '3.14') and extra == 'zstd'",
+        "brotli>=1.2.0; (platform_python_implementation == 'CPython') and extra == 'brotli'",
+        "brotlicffi>=1.2.0.0; (platform_python_implementation != 'CPython') and extra == 'brotli'",
+        "h2<5,>=4; extra == 'h2'",
+        "pysocks!=1.5.7,<2.0,>=1.5.6; extra == 'socks'"
+      ],
+      "files": 79
+    }
+  ]
+}

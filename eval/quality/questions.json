@@ -1,0 +1,44 @@
+{
+  "about": "Questions with known answers, checked against the sources (CPython 3.12 stdlib and shrink itself). An answer is correct when it contains, for every group in 'expect', at least one of the group's strings (case-insensitive). 'needs' says where the answer lives: signature/module code survives the skeleton level, body/docstring does not.",
+  "corpora": {
+    "textproc": {
+      "stdlib": ["textwrap.py", "shlex.py", "fnmatch.py"],
+      "questions": [
+        {"id": "a1", "needs": "signature", "q": "What is the default value of the width parameter of textwrap.TextWrapper?", "expect": [["70"]]},
+        {"id": "a2", "needs": "signature", "q": "What is the default placeholder string of textwrap.TextWrapper (used by textwrap.shorten)?", "expect": [["[...]"]]},
+        {"id": "a3", "needs": "signature", "q": "List the parameters of textwrap.shorten.", "expect": [["text"], ["width"], ["kwargs", "**"]]},
+        {"id": "a4", "needs": "body", "q": "What exactly does shlex.quote return when it is given an empty string?", "expect": [["''", "two single quotes", "pair of single quotes", "empty single quotes"]]},
+        {"id": "a5", "needs": "signature", "q": "What is the default value of the comments parameter of shlex.split?", "expect": [["false"]]},
+        {"id": "a6", "needs": "signature", "q": "What is the default value of the posix parameter of shlex.split?", "expect": [["true"]]},
+        {"id": "a7", "needs": "body", "q": "Which function does shlex.join apply to every argument before joining them?", "expect": [["quote"]]},
+        {"id": "a8", "needs": "body", "q": "Which function does fnmatch.fnmatch apply to both the name and the pattern before matching?", "expect": [["normcase"]]}
+      ]
+    },
+    "json": {
+      "stdlib": ["json/__init__.py", "json/decoder.py", "json/encoder.py"],
+      "questions": [
+        {"id": "b1", "needs": "signature", "q": "What is the default value of the indent parameter of json.dumps?", "expect": [["none"]]},
+        {"id": "b2", "needs": "signature", "q": "What is the name of the first parameter of json.load?", "expect": [["fp"]]},
+        {"id": "b3", "needs": "signature", "q": "Which built-in exception class is the base class of json.JSONDecodeError?", "expect": [["valueerror"]]},
+        {"id": "b4", "needs": "body", "q": "Which exception does the default implementation of JSONEncoder.default raise?", "expect": [["typeerror"]]},
+        {"id": "b5", "needs": "body", "q": "Complete the error message raised for an object that cannot be serialized: 'Object of type X ...'", "expect": [["not json serializable"]]},
+        {"id": "b6", "needs": "module", "q": "With which value of skipkeys is the module-level _default_encoder in json/__init__.py created?", "expect": [["false"]]},
+        {"id": "b7", "needs": "module", "q": "Which re flags are combined in the FLAGS constant of json.decoder?", "expect": [["verbose"], ["multiline"], ["dotall"]]},
+        {"id": "b8", "needs": "signature", "q": "What is the default value of the ensure_ascii parameter of json.dumps?", "expect": [["true"]]}
+      ]
+    },
+    "shrink": {
+      "project": ["src/shrink/retrieval/bm25.py", "src/shrink/compressors/log.py", "src/shrink/splitting/framed.py", "src/shrink/splitting/formats.py"],
+      "questions": [
+        {"id": "c1", "needs": "module", "q": "What is the value of the BM25 constant K1 in shrink?", "expect": [["1.5"]]},
+        {"id": "c2", "needs": "module", "q": "What is the value of the BM25 constant B in shrink?", "expect": [["0.75"]]},
+        {"id": "c3", "needs": "module", "q": "What is the largest size, in lines, of a repeating block that log mode collapses (MAX_BLOCK)?", "expect": [["8"]]},
+        {"id": "c4", "needs": "body", "q": "What marker text does log mode write in place of dropped DEBUG/INFO lines (the words after the number)?", "expect": [["lines dropped", "line dropped"]]},
+        {"id": "c5", "needs": "module", "q": "How many lines of lookahead does FramedSplitter use (the LOOKAHEAD constant)?", "expect": [["3"]]},
+        {"id": "c6", "needs": "module", "q": "How many '=' characters make up the separator line of the Repomix plain style that shrink recognises?", "expect": [["16"]]},
+        {"id": "c7", "needs": "module", "q": "Which line marks the end of a file in the files-to-prompt default format, according to shrink?", "expect": [["---"]]},
+        {"id": "c8", "needs": "module", "q": "What is the name of the set of words that shrink's BM25 tokenizer ignores?", "expect": [["stop_words", "stop words"]]}
+      ]
+    }
+  }
+}
