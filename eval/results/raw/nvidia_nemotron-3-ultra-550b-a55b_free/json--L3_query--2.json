@@ -3,11 +3,11 @@
  "corpus": "json",
  "variant": "L3+query",
  "run": 2,
- "context_tokens": 4422,
+ "context_tokens": 4434,
  "usage": {
-  "prompt_tokens": 4389,
-  "completion_tokens": 717,
-  "total_tokens": 5106,
+  "prompt_tokens": 4403,
+  "completion_tokens": 705,
+  "total_tokens": 5108,
   "cost": 0,
   "is_byok": false,
   "prompt_tokens_details": {
@@ -22,7 +22,7 @@
    "upstream_inference_completions_cost": 0
   },
   "completion_tokens_details": {
-   "reasoning_tokens": 646,
+   "reasoning_tokens": 634,
    "image_tokens": 0,
    "audio_tokens": 0
   }

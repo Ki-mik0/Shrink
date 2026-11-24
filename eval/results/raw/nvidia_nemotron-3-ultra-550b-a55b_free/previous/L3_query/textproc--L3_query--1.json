@@ -1,0 +1,31 @@
+{
+ "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+ "corpus": "textproc",
+ "variant": "L3+query",
+ "run": 1,
+ "context_tokens": 2506,
+ "usage": {
+  "prompt_tokens": 2462,
+  "completion_tokens": 1029,
+  "total_tokens": 3491,
+  "cost": 0,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0,
+   "upstream_inference_prompt_cost": 0,
+   "upstream_inference_completions_cost": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 960,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "content": "{\n  \"1\": \"70\",\n  \"2\": \" [...]\",\n  \"3\": \"text, width, **kwargs\",\n  \"4\": \"unknown\",\n  \"5\": \"False\",\n  \"6\": \"True\",\n  \"7\": \"unknown\",\n  \"8\": \"os.path.normcase\"\n}"
+}

@@ -3,15 +3,15 @@
  "corpus": "textproc",
  "variant": "L3+query",
  "run": 2,
- "context_tokens": 2506,
+ "context_tokens": 5758,
  "usage": {
-  "prompt_tokens": 2462,
-  "completion_tokens": 672,
-  "total_tokens": 3134,
+  "prompt_tokens": 5353,
+  "completion_tokens": 623,
+  "total_tokens": 5976,
   "cost": 0,
   "is_byok": false,
   "prompt_tokens_details": {
-   "cached_tokens": 0,
+   "cached_tokens": 4384,
    "cache_write_tokens": 0,
    "audio_tokens": 0,
    "video_tokens": 0
@@ -22,10 +22,10 @@
    "upstream_inference_completions_cost": 0
   },
   "completion_tokens_details": {
-   "reasoning_tokens": 613,
+   "reasoning_tokens": 564,
    "image_tokens": 0,
    "audio_tokens": 0
   }
  },
- "content": "{\"1\": \"70\", \"2\": \" [...]\", \"3\": \"text, width, **kwargs\", \"4\": \"unknown\", \"5\": \"False\", \"6\": \"True\", \"7\": \"unknown\", \"8\": \"os.path.normcase\"}"
+ "content": "{\"1\": \"70\", \"2\": \" [...]\", \"3\": \"text, width, **kwargs\", \"4\": \"''\", \"5\": \"False\", \"6\": \"True\", \"7\": \"quote\", \"8\": \"os.path.normcase\"}"
 }

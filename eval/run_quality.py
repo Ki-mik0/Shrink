@@ -183,6 +183,18 @@ def read_stream(response: Iterable[bytes]) -> dict[str, Any]:
     return {"choices": [{"message": {"content": "".join(content)}}], "usage": usage}
 
 
+def archive(model: str, variant: str) -> None:
+    """Move a variant's saved answers aside, so the next run asks again."""
+    folder = raw_path(model, "x", "x", 0).parent
+    target = folder / "previous" / variant.replace("+", "_")
+    moved = 0
+    for path in folder.glob(f"*--{variant.replace('+', '_')}--*.json"):
+        target.mkdir(parents=True, exist_ok=True)
+        path.replace(target / path.name)
+        moved += 1
+    print(f"{moved} saved answer(s) for {variant} moved to {target}")
+
+
 def parse_answers(text: str) -> dict[str, str]:
     """The JSON object in the reply, even inside a code fence or prose."""
     match = re.search(r"\{.*\}", text, re.DOTALL)
@@ -293,6 +305,7 @@ def report(model: str) -> None:
         + " | All | Structure questions | Body questions |",
         "| --- | ---: |" + " ---: |" * (len(names) + 3),
     ]
+    incomplete: list[str] = []
     for variant in VARIANTS:
         if not rows[variant]:
             continue
@@ -303,11 +316,21 @@ def report(model: str) -> None:
         need = by_need[variant]
         structure = mean(need["structure"]) * 100 if need.get("structure") else 0
         body = mean(need["body"]) * 100 if need.get("body") else 0
+        partial = len(tokens[variant]) < len(names)
+        total = f"{sum(tokens[variant].values())}{' (partial)' if partial else ''}"
         lines.append(
-            f"| {variant} | {sum(tokens[variant].values())} | "
+            f"| {variant} | {total} | "
             + " | ".join(cells)
             + f" | {mean(every) * 100:.0f}% | {structure:.0f}% | {body:.0f}% |"
         )
+        if partial:
+            incomplete.append(variant)
+    if incomplete:
+        lines += [
+            "",
+            f"Not finished yet: {', '.join(incomplete)} (some corpora have no answers;"
+            " run the same command again to continue).",
+        ]
     if misses:
         questions = {q["id"]: q for c in corpora.values() for q in c.questions}
         lines += ["", "## Wrong answers", "", "| Context | Question | Needs | Answers |"]
@@ -334,8 +357,15 @@ def main() -> None:
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--dry-run", action="store_true", help="no network: show prompt sizes")
     parser.add_argument("--report", action="store_true", help="only rebuild the table")
+    parser.add_argument(
+        "--redo",
+        choices=VARIANTS,
+        help="ask again for one context variant (saved answers move to raw/.../previous/)",
+    )
     args = parser.parse_args()
     try:
+        if args.redo:
+            archive(args.model, args.redo)
         if args.report:
             report(args.model)
         else:
