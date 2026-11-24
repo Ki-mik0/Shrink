@@ -42,6 +42,31 @@ jobs:
           printf 'a   b\n\n\n\nc\n' | shrink --stats > out.txt
           printf 'a b\n\nc\n' | cmp - out.txt
 
+  windows-legacy-encoding:
+    # Pipes on Windows use the ANSI code page unless UTF-8 mode is on (default only
+    # from Python 3.15): Cyrillic must still pass through byte for byte.
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest tests/pipes tests/unit/test_io.py --no-cov
+      - name: Cyrillic through a real pipe
+        shell: pwsh
+        run: |
+          $in = [System.Text.Encoding]::UTF8.GetBytes("Привіт,   світе!`n`n`n")
+          [System.IO.File]::WriteAllBytes("in.txt", $in)
+          cmd /c "shrink -m text -l 2 < in.txt > out.txt"
+          $out = [System.IO.File]::ReadAllBytes("out.txt")
+          $expected = [System.Text.Encoding]::UTF8.GetBytes("Привіт, світе!`n")
+          if ([Convert]::ToBase64String($out) -ne [Convert]::ToBase64String($expected)) {
+            Write-Error "unexpected bytes: $([System.Text.Encoding]::UTF8.GetString($out))"
+          }
+
   tokens-offline:
     # NFR-7: fetch the vocabulary once, then count tokens with the network blocked.
     runs-on: ubuntu-latest
