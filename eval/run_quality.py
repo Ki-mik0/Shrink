@@ -262,7 +262,9 @@ def run(model: str, runs: int, dry_run: bool) -> None:
                     "usage": reply.get("usage", {}),
                     "content": reply["choices"][0]["message"].get("content") or "",
                 }
-                path.write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
+                path.write_text(
+                    json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n"
+                )
                 print(f"{corpus.name:<9} {variant:<9} run {number}: saved")
     if dry_run:
         total = len(load_corpora()) * len(VARIANTS) * runs
@@ -347,7 +349,7 @@ def report(model: str) -> None:
             )
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = "\n".join(lines) + "\n"
-    (RESULTS / "quality.md").write_text(out, encoding="utf-8")
+    (RESULTS / "quality.md").write_text(out, encoding="utf-8", newline="\n")
     print(out)
 
 

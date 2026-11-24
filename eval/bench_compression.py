@@ -73,7 +73,7 @@ def run_repomix(samples: list[Sample], count, table: dict) -> None:  # type: ign
         names = {}
         for i, sample in enumerate(samples):
             name = f"f{i:02d}_{Path(sample.name).name}"
-            (folder / name).write_text(sample.read(), encoding="utf-8")
+            (folder / name).write_text(sample.read(), encoding="utf-8", newline="\n")
             names[name] = sample.name
         started = time.perf_counter()
         packed = subprocess.run(
@@ -214,9 +214,10 @@ def main() -> None:
     (RESULTS / "compression.json").write_text(
         json.dumps({"python": code, "other": other, "env": python_version()}, indent=1) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     report = markdown(code, other, columns, versions)
-    (RESULTS / "compression.md").write_text(report, encoding="utf-8")
+    (RESULTS / "compression.md").write_text(report, encoding="utf-8", newline="\n")
     print(report)
 
 

@@ -1,0 +1,63 @@
+{
+  "about": "Four technical paragraphs with the same meaning in ten languages, written for this benchmark: English first, the other languages translated by an LLM (Claude) and kept as they are. Inline code, paths and numbers are identical in every language, so they also test what the translator must protect.",
+  "en": [
+    "To install the tool, create a virtual environment and run `pip install shrink`. The command works offline after the first download and needs about 30 MB of disk space.",
+    "When the input is empty, the program exits with code 0 and prints nothing. If a file cannot be parsed, it is passed through unchanged and a warning is written to the error stream.",
+    "The settings file is stored in src/shrink/config.py, and the documentation is available at https://example.com/docs. Change the value of `max_lines` if the output is too long.",
+    "Compression saves tokens, but it must not change the meaning of the code. That is why every result is checked by the parser before it is sent to the language model."
+  ],
+  "uk": [
+    "Щоб установити інструмент, створіть віртуальне середовище й виконайте `pip install shrink`. Після першого завантаження команда працює без мережі й займає приблизно 30 MB на диску.",
+    "Коли вхід порожній, програма завершується з кодом 0 і нічого не виводить. Якщо файл не вдається розібрати, він передається без змін, а в потік помилок записується попередження.",
+    "Файл налаштувань зберігається в src/shrink/config.py, а документація доступна за адресою https://example.com/docs. Змініть значення `max_lines`, якщо вивід занадто довгий.",
+    "Стиснення економить токени, але не повинно змінювати зміст коду. Тому кожен результат перевіряється парсером, перш ніж його буде надіслано мовній моделі."
+  ],
+  "ru": [
+    "Чтобы установить инструмент, создайте виртуальное окружение и выполните `pip install shrink`. После первой загрузки команда работает без сети и занимает около 30 MB на диске.",
+    "Когда вход пуст, программа завершается с кодом 0 и ничего не выводит. Если файл не удаётся разобрать, он передаётся без изменений, а в поток ошибок записывается предупреждение.",
+    "Файл настроек хранится в src/shrink/config.py, а документация доступна по адресу https://example.com/docs. Измените значение `max_lines`, если вывод слишком длинный.",
+    "Сжатие экономит токены, но не должно менять смысл кода. Поэтому каждый результат проверяется парсером, прежде чем он будет отправлен языковой модели."
+  ],
+  "pl": [
+    "Aby zainstalować narzędzie, utwórz środowisko wirtualne i uruchom `pip install shrink`. Po pierwszym pobraniu polecenie działa bez sieci i zajmuje około 30 MB na dysku.",
+    "Gdy wejście jest puste, program kończy działanie z kodem 0 i nic nie wypisuje. Jeśli pliku nie da się przetworzyć, jest przekazywany bez zmian, a do strumienia błędów trafia ostrzeżenie.",
+    "Plik ustawień znajduje się w src/shrink/config.py, a dokumentacja jest dostępna pod adresem https://example.com/docs. Zmień wartość `max_lines`, jeśli wynik jest zbyt długi.",
+    "Kompresja oszczędza tokeny, ale nie może zmieniać znaczenia kodu. Dlatego każdy wynik jest sprawdzany przez parser, zanim zostanie wysłany do modelu językowego."
+  ],
+  "de": [
+    "Um das Werkzeug zu installieren, erstellen Sie eine virtuelle Umgebung und führen Sie `pip install shrink` aus. Nach dem ersten Download funktioniert der Befehl offline und benötigt etwa 30 MB Speicherplatz.",
+    "Wenn die Eingabe leer ist, beendet sich das Programm mit dem Code 0 und gibt nichts aus. Kann eine Datei nicht verarbeitet werden, wird sie unverändert weitergegeben und eine Warnung in den Fehlerstrom geschrieben.",
+    "Die Einstellungsdatei liegt in src/shrink/config.py, und die Dokumentation ist unter https://example.com/docs verfügbar. Ändern Sie den Wert von `max_lines`, wenn die Ausgabe zu lang ist.",
+    "Die Komprimierung spart Tokens, darf aber die Bedeutung des Codes nicht verändern. Deshalb wird jedes Ergebnis vom Parser geprüft, bevor es an das Sprachmodell gesendet wird."
+  ],
+  "es": [
+    "Para instalar la herramienta, cree un entorno virtual y ejecute `pip install shrink`. Después de la primera descarga, el comando funciona sin conexión y ocupa unos 30 MB de disco.",
+    "Cuando la entrada está vacía, el programa termina con el código 0 y no imprime nada. Si un archivo no se puede analizar, se transmite sin cambios y se escribe una advertencia en el flujo de errores.",
+    "El archivo de configuración se guarda en src/shrink/config.py y la documentación está disponible en https://example.com/docs. Cambie el valor de `max_lines` si la salida es demasiado larga.",
+    "La compresión ahorra tokens, pero no debe cambiar el significado del código. Por eso cada resultado se comprueba con el analizador antes de enviarlo al modelo de lenguaje."
+  ],
+  "fr": [
+    "Pour installer l'outil, créez un environnement virtuel et exécutez `pip install shrink`. Après le premier téléchargement, la commande fonctionne hors ligne et occupe environ 30 MB sur le disque.",
+    "Lorsque l'entrée est vide, le programme se termine avec le code 0 et n'affiche rien. Si un fichier ne peut pas être analysé, il est transmis sans modification et un avertissement est écrit dans le flux d'erreurs.",
+    "Le fichier de configuration se trouve dans src/shrink/config.py et la documentation est disponible à l'adresse https://example.com/docs. Modifiez la valeur de `max_lines` si la sortie est trop longue.",
+    "La compression économise des jetons, mais elle ne doit pas changer le sens du code. C'est pourquoi chaque résultat est vérifié par l'analyseur avant d'être envoyé au modèle de langage."
+  ],
+  "zh": [
+    "要安装该工具，请创建一个虚拟环境并运行 `pip install shrink`。首次下载后，该命令可以离线运行，大约占用 30 MB 磁盘空间。",
+    "当输入为空时，程序以代码 0 退出，并且不输出任何内容。如果某个文件无法解析，它将原样传递，并在错误流中写入一条警告。",
+    "设置文件保存在 src/shrink/config.py 中，文档可在 https://example.com/docs 查看。如果输出太长，请修改 `max_lines` 的值。",
+    "压缩可以节省词元，但不能改变代码的含义。因此，每个结果在发送给语言模型之前都会由解析器进行检查。"
+  ],
+  "ja": [
+    "ツールをインストールするには、仮想環境を作成して `pip install shrink` を実行してください。最初のダウンロード後はオフラインで動作し、約 30 MB のディスク容量を使用します。",
+    "入力が空の場合、プログラムはコード 0 で終了し、何も出力しません。ファイルを解析できない場合は、そのまま渡され、エラーストリームに警告が書き込まれます。",
+    "設定ファイルは src/shrink/config.py に保存されており、ドキュメントは https://example.com/docs で参照できます。出力が長すぎる場合は `max_lines` の値を変更してください。",
+    "圧縮はトークンを節約しますが、コードの意味を変えてはいけません。そのため、すべての結果は言語モデルに送信される前にパーサーで検査されます。"
+  ],
+  "ar": [
+    "لتثبيت الأداة، أنشئ بيئة افتراضية ثم شغّل `pip install shrink`. بعد التنزيل الأول يعمل الأمر دون اتصال بالشبكة ويشغل نحو 30 MB من مساحة القرص.",
+    "عندما يكون الإدخال فارغًا، ينتهي البرنامج بالرمز 0 ولا يطبع شيئًا. إذا تعذّر تحليل ملف، فإنه يُمرَّر دون تغيير وتُكتب رسالة تحذير في مجرى الأخطاء.",
+    "يُحفظ ملف الإعدادات في src/shrink/config.py، والتوثيق متاح على https://example.com/docs. غيّر قيمة `max_lines` إذا كان الناتج طويلًا جدًا.",
+    "يوفّر الضغط الرموز، لكنه يجب ألا يغيّر معنى الشيفرة. لذلك يُفحص كل ناتج بواسطة المحلّل قبل إرساله إلى النموذج اللغوي."
+  ]
+}
