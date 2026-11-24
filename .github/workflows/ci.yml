@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest
+      - name: Smoke-test the installed command in a real pipe
+        shell: bash
+        run: |
+          printf 'a   b\n\n\n\nc\n' | shrink --stats > out.txt
+          printf 'a b\n\nc\n' | cmp - out.txt
+
+  tokens-offline:
+    # NFR-7: fetch the vocabulary once, then count tokens with the network blocked.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev,tokens]"
+      - run: shrink --download tokenizer
+      - name: Exact counts without network
+        env:
+          HTTPS_PROXY: http://127.0.0.1:9
+          HTTP_PROXY: http://127.0.0.1:9
+        run: |
+          printf 'hello world\n' | shrink --stats > /dev/null 2> stats.txt
+          cat stats.txt
+          grep -q '\[o200k_base\]' stats.txt
+          python -m pytest tests/unit/test_tokens_and_cost.py -k real --no-cov
+
+  startup:
+    # NFR-1: start-up time without --stats. Informational until a baseline is agreed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: sudo apt-get install -y hyperfine
+      - run: |
+          hyperfine --warmup 5 --runs 30 \
+            "python -c pass" \
+            "echo hi | shrink" \
+            --export-markdown startup.md
+          cat startup.md >> "$GITHUB_STEP_SUMMARY"
