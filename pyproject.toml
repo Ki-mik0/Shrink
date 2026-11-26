@@ -51,6 +51,8 @@ packages = ["src/shrink"]
 line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
+# Benchmark input, kept exactly as written: reformatting would change its token count.
+extend-exclude = ["eval/generation/starter"]
 
 [tool.ruff.format]
 line-ending = "lf"

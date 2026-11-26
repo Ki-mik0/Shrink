@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taskboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!--
+    The application shell. Every page shares this header and the message area;
+    page scripts render into <main id="app">. Feature pages (sign-in, lists)
+    are separate HTML files that reuse the same structure and scripts.
+  -->
+  <header class="topbar">
+    <a class="brand" href="index.html">Taskboard</a>
+    <nav id="nav" class="nav">
+      <!-- Filled by js/app.js once we know whether the user is signed in. -->
+    </nav>
+  </header>
+
+  <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+  <main id="app" class="container">
+    <section class="card">
+      <h1>Welcome</h1>
+      <p>Taskboard keeps your personal task lists in one place.</p>
+      <p id="health" class="muted">Checking the service...</p>
+    </section>
+  </main>
+
+  <footer class="footer muted">Taskboard</footer>
+
+  <script type="module">
+    import { apiFetch, ApiError } from "./js/api.js";
+    import { showMessage } from "./js/ui.js";
+
+    // Show that the backend is reachable; a failure here usually means the
+    // server is not running or the database cannot be opened.
+    try {
+      const health = await apiFetch("/api/health");
+      document.getElementById("health").textContent =
+        `Service is up (version ${health.version}).`;
+    } catch (error) {
+      const text = error instanceof ApiError ? error.message : "The service cannot be reached.";
+      document.getElementById("health").textContent = "";
+      showMessage(text, "error");
+    }
+  </script>
+</body>
+</html>
