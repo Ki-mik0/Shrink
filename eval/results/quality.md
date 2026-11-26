@@ -1,15 +1,15 @@
 # Quality eval
 
-Model `nvidia/nemotron-3-ultra-550b-a55b:free` via OpenRouter, Python 3.12.10; context tokens are o200k_base.
+Model `nvidia/nemotron-3-ultra-550b-a55b:free` via OpenRouter, Python 3.12.10; prompt tokens counted with o200k_base.
 Accuracy = share of questions answered correctly (keyword check), mean over runs.
 
 | Context | Tokens | textproc | json | shrink | All | Structure questions | Body questions |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| original | 26019 | 100% | 100% | 100% | 100% | 100% | 100% |
-| L1 | 23596 | 100% | 100% | 100% | 100% | 100% | 100% |
-| L2 | 17304 | 100% | 100% | 100% | 100% | 100% | 100% |
-| L3 | 5733 | 62% | 92% | 100% | 85% | 100% | 39% |
-| L3+query | 10192 (partial) | 100% | 100% | — | 100% | 100% | 100% |
+| original | 24784 | 100% | 100% | 100% | 100% | 100% | 100% |
+| L1 | 22582 | 100% | 100% | 100% | 100% | 100% | 100% |
+| L2 | 16680 | 100% | 100% | 100% | 100% | 100% | 100% |
+| L3 | 6044 | 62% | 92% | 100% | 85% | 100% | 39% |
+| L3+query | 9084 (partial) | 100% | 100% | — | 100% | 100% | 100% |
 
 Not finished yet: L3+query (some corpora have no answers; run the same command again to continue).
 

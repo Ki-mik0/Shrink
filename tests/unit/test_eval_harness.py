@@ -219,3 +219,17 @@ def test_dropped_connection_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     reply = run_quality.ask("m", "p", "k")
     assert reply["choices"][0]["message"]["content"] == "{}"
     assert waits == run_quality.RETRY_WAITS[:2]
+
+
+def test_redo_moves_a_variants_answers_aside(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(run_quality, "RESULTS", tmp_path)
+    for variant in ("L3", "L3+query"):
+        path = run_quality.raw_path("m/x", "json", variant, 1)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}", encoding="utf-8")
+    run_quality.archive("m/x", "L3+query")
+    folder = run_quality.raw_path("m/x", "x", "x", 0).parent
+    assert [p.name for p in folder.glob("*.json")] == ["json--L3--1.json"]
+    assert (folder / "previous" / "L3_query" / "json--L3_query--1.json").is_file()

@@ -29,7 +29,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
@@ -109,21 +109,30 @@ def build_prompt(corpus: Corpus, context: str) -> str:
     return f"Source files:\n\n{context}\nQuestions:\n{numbered}\n"
 
 
-def ask(model: str, prompt: str, key: str) -> dict[str, Any]:
-    body = json.dumps(
-        {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.3,
-            # Streamed, so a long answer arrives in pieces instead of one response a
-            # gateway may cut off; reasoning models think briefly and keep it to themselves.
-            "stream": True,
-            "reasoning": {"effort": "low", "exclude": True},
-        }
-    ).encode()
+def ask(
+    model: str,
+    prompt: str,
+    key: str,
+    *,
+    system: str = SYSTEM,
+    max_tokens: int | None = None,
+    on_chunk: Callable[[int], None] | None = None,
+) -> dict[str, Any]:
+    request_body: dict[str, Any] = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.3,
+        # Streamed, so a long answer arrives in pieces instead of one response a
+        # gateway may cut off; reasoning models think briefly and keep it to themselves.
+        "stream": True,
+        "reasoning": {"effort": "low", "exclude": True},
+    }
+    if max_tokens is not None:
+        request_body["max_tokens"] = max_tokens
+    body = json.dumps(request_body).encode()
     request = urllib.request.Request(
         ENDPOINT,
         data=body,
@@ -136,7 +145,7 @@ def ask(model: str, prompt: str, key: str) -> dict[str, Any]:
     for attempt, wait in enumerate([*RETRY_WAITS, None]):
         try:
             with urllib.request.urlopen(request, timeout=300) as response:
-                return read_stream(response)
+                return read_stream(response, on_chunk)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "replace")
             lowered = detail.lower()
@@ -155,11 +164,18 @@ def ask(model: str, prompt: str, key: str) -> dict[str, Any]:
     raise AssertionError("unreachable")
 
 
-def read_stream(response: Iterable[bytes]) -> dict[str, Any]:
-    """Collect a server-sent-events chat completion into one reply."""
+def read_stream(
+    response: Iterable[bytes], on_chunk: Callable[[int], None] | None = None
+) -> dict[str, Any]:
+    """Collect a server-sent-events chat completion into one reply.
+
+    ``on_chunk`` gets the number of characters received so far, after every piece.
+    """
+    received = 0
     content: list[str] = []
     usage: dict[str, Any] = {}
     finished = False
+    reason = ""
     for raw in response:
         line = raw.decode("utf-8", "replace").strip()
         if not line or line.startswith(":"):  # blank line or keep-alive comment
@@ -174,13 +190,21 @@ def read_stream(response: Iterable[bytes]) -> dict[str, Any]:
         if "error" in event:
             raise TemporaryLimitError(str(event["error"])[:300])
         for choice in event.get("choices") or []:
-            content.append((choice.get("delta") or {}).get("content") or "")
+            piece = (choice.get("delta") or {}).get("content") or ""
+            content.append(piece)
+            received += len(piece)
+            if piece and on_chunk is not None:
+                on_chunk(received)
             if choice.get("finish_reason"):
                 finished = True
+                reason = str(choice["finish_reason"])
         usage = event.get("usage") or usage
     if not finished:
         raise TemporaryLimitError("the stream ended before the answer was complete")
-    return {"choices": [{"message": {"content": "".join(content)}}], "usage": usage}
+    return {
+        "choices": [{"message": {"content": "".join(content)}, "finish_reason": reason}],
+        "usage": usage,
+    }
 
 
 def archive(model: str, variant: str) -> None:
@@ -220,7 +244,10 @@ def raw_path(model: str, corpus: str, variant: str, run: int) -> Path:
 
 
 def run(model: str, runs: int, dry_run: bool) -> None:
-    count = make_counter().count
+    counter = make_counter()
+    if counter.approximate:
+        print("note: no exact tokenizer here (shrink --download tokenizer); counts are estimates")
+    count = counter.count
     key = os.environ.get("OPENROUTER_API_KEY", "")
     if not dry_run and not key:
         sys.exit("set OPENROUTER_API_KEY first (or use --dry-run)")
@@ -273,12 +300,32 @@ def run(model: str, runs: int, dry_run: bool) -> None:
         report(model)
 
 
+def wrong_answers(
+    misses: dict[tuple[str, str], list[str]], corpora: dict[str, Corpus]
+) -> list[str]:
+    if not misses:
+        return []
+    questions = {q["id"]: q for c in corpora.values() for q in c.questions}
+    lines = ["", "## Wrong answers", "", "| Context | Question | Needs | Answers |"]
+    lines.append("| --- | --- | --- | --- |")
+    order = {v: i for i, v in enumerate(VARIANTS)}
+    for (variant, qid), answers in sorted(misses.items(), key=lambda m: (order[m[0][0]], m[0][1])):
+        question = questions[qid]
+        shown = ", ".join(sorted({a.strip() or "(none)" for a in answers}))[:80]
+        lines.append(
+            f"| {variant} | {qid}: {question['q']} | {question['needs']} | "
+            f"{len(answers)}x: {shown} |"
+        )
+    return lines
+
+
 def report(model: str) -> None:
     corpora = {c.name: c for c in load_corpora()}
     rows: dict[str, dict[str, list[float]]] = {v: {} for v in VARIANTS}
     tokens: dict[str, dict[str, int]] = {v: {} for v in VARIANTS}
     by_need: dict[str, dict[str, list[int]]] = {v: {} for v in VARIANTS}
     misses: dict[tuple[str, str], list[str]] = {}
+    counter = make_counter()
     folder = raw_path(model, "x", "x", 0).parent
     for path in sorted(folder.glob("*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
@@ -294,12 +341,17 @@ def report(model: str) -> None:
             if not ok:
                 misses.setdefault((record["variant"], question["id"]), []).append(answer)
         rows[record["variant"]].setdefault(corpus.name, []).append(sum(hits) / len(hits))
-        tokens[record["variant"]][corpus.name] = record["context_tokens"]
+        if corpus.name not in tokens[record["variant"]]:
+            # Counted now, exactly, rather than trusting the count saved with the answer:
+            # a run without the tokenizer falls back to the chars / 4 estimate.
+            prompt = build_prompt(corpus, build_context(corpus, record["variant"]))
+            tokens[record["variant"]][corpus.name] = counter.count(prompt)
     names = list(corpora)
     lines = [
         "# Quality eval",
         "",
-        f"Model `{model}` via OpenRouter, {python_version()}; context tokens are o200k_base.",
+        f"Model `{model}` via OpenRouter, {python_version()}; prompt tokens counted with "
+        f"{counter.name}{' (estimate)' if counter.approximate else ''}.",
         "Accuracy = share of questions answered correctly (keyword check), mean over runs.",
         "",
         "| Context | Tokens | "
@@ -333,20 +385,7 @@ def report(model: str) -> None:
             f"Not finished yet: {', '.join(incomplete)} (some corpora have no answers;"
             " run the same command again to continue).",
         ]
-    if misses:
-        questions = {q["id"]: q for c in corpora.values() for q in c.questions}
-        lines += ["", "## Wrong answers", "", "| Context | Question | Needs | Answers |"]
-        lines.append("| --- | --- | --- | --- |")
-        order = {v: i for i, v in enumerate(VARIANTS)}
-        for (variant, qid), answers in sorted(
-            misses.items(), key=lambda m: (order[m[0][0]], m[0][1])
-        ):
-            question = questions[qid]
-            shown = ", ".join(sorted({a.strip() or "(none)" for a in answers}))[:80]
-            lines.append(
-                f"| {variant} | {qid}: {question['q']} | {question['needs']} | "
-                f"{len(answers)}x: {shown} |"
-            )
+    lines += wrong_answers(misses, corpora)
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = "\n".join(lines) + "\n"
     (RESULTS / "quality.md").write_text(out, encoding="utf-8", newline="\n")
@@ -372,6 +411,8 @@ def main() -> None:
             report(args.model)
         else:
             run(args.model, args.runs, args.dry_run)
+    except KeyboardInterrupt:
+        sys.exit("stopped; answers saved so far are kept, run again to continue")
     except RuntimeError as exc:  # bad key, unknown model...: one line, no traceback
         sys.exit(f"error: {exc}")
 
