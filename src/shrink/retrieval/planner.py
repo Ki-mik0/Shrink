@@ -18,12 +18,13 @@ Nothing is cut off: if even that is too much, a warning says how close it got.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from shrink.compressors.base import MAX_LEVEL
 from shrink.document import Document
-from shrink.retrieval.bm25 import BM25
+from shrink.retrieval.bm25 import BM25, tokenize
 
 RELEVANT_SHARE = 0.5
 
@@ -83,16 +84,15 @@ class Planner:
         chunks = [chunk for i, plan in enumerate(plans) for chunk in _chunks(i, plan.doc)]
         if not chunks:
             return
-        scores = BM25([chunk.text for chunk in chunks]).scores(self._query)
-        best = max(scores)
-        if best <= 0:
+        relevance = query_relevance([chunk.text for chunk in chunks], self._query)
+        if max(relevance) <= 0:
             self._say(f"query: nothing in {len(plans)} file(s) matches; compressing as usual")
             return
         keep: dict[int, set[str]] = {}
-        for chunk, score in zip(chunks, scores, strict=True):
+        for chunk, share in zip(chunks, relevance, strict=True):
             plan = plans[chunk.index]
-            plan.relevance = max(plan.relevance, score / best)
-            if score >= RELEVANT_SHARE * best and chunk.name is not None:
+            plan.relevance = max(plan.relevance, share)
+            if share >= RELEVANT_SHARE and chunk.name is not None:
                 keep.setdefault(chunk.index, set()).add(chunk.name)
         kept: list[str] = []
         for i, plan in enumerate(plans):
@@ -147,6 +147,30 @@ class Planner:
     def _say(self, message: str) -> None:
         if self._report is not None:
             self._report(message)
+
+
+_QUESTION_END = re.compile(r"(?<=[.?!;])\s+|\n+")  # "a.b" in names has no space after the dot
+
+
+def query_relevance(chunks: list[str], query: str) -> list[float]:
+    """Each chunk's relevance in 0..1: its best score against any question in ``query``.
+
+    A query may hold several questions. Ranked as one bag of words, the
+    questions with the most distinctive words take the top scores and push the
+    others' chunks under the threshold. So every question is ranked on its own,
+    against its own best chunk, and a chunk counts as much as its best match.
+    """
+    index = BM25(chunks)
+    parts = [part for part in _QUESTION_END.split(query) if tokenize(part)] or [query]
+    relevance = [0.0] * len(chunks)
+    for part in parts:
+        scores = index.scores(part)
+        best = max(scores, default=0.0)
+        if best > 0:
+            relevance = [
+                max(old, score / best) for old, score in zip(relevance, scores, strict=True)
+            ]
+    return relevance
 
 
 def _chunks(index: int, doc: Document) -> list[_Chunk]:

@@ -277,3 +277,29 @@ def test_cli_budget_reports_and_warns(runner: CliRunner) -> None:
 def test_cli_budget_must_be_positive(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["--budget", "0"], input="x")
     assert result.exit_code == 2
+
+
+def test_each_question_of_a_query_is_ranked_on_its_own() -> None:
+    from shrink.retrieval.planner import query_relevance
+
+    chunks = [
+        "textwrap shorten placeholder width text kwargs parameters list textwrap",
+        "shlex quote empty string return",
+        "shlex join quote arguments",
+    ]
+    # As one bag of words the first question's rare words win and the second's chunk
+    # falls under half of the best; ranked per question, each finds its own chunk.
+    query = (
+        "List the parameters of textwrap.shorten. What does shlex.quote return for an empty string?"
+    )
+    relevance = query_relevance(chunks, query)
+    assert relevance[0] == 1.0
+    assert relevance[1] == 1.0
+    assert 0 < relevance[2] < 1.0
+
+
+def test_dotted_names_do_not_split_a_question() -> None:
+    from shrink.retrieval.planner import query_relevance
+
+    assert query_relevance(["textwrap shorten"], "textwrap.shorten") == [1.0]
+    assert query_relevance(["x"], "nothing matches") == [0.0]
