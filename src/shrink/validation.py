@@ -28,10 +28,18 @@ _SCOPES = (ast.Module, ast.ClassDef, *_FUNCTIONS)
 
 
 def check_same_code(
-    before: ast.Module, after_text: str, *, ignore_docstrings: bool = False
+    before: ast.Module,
+    after_text: str,
+    *,
+    ignore_docstrings: bool = False,
+    ignore_stubs: bool = False,
 ) -> None:
+    """``ignore_stubs``: a body that is only ``...`` counts as empty (where a removed
+    docstring had to leave something behind)."""
     after = _parse(after_text)
-    if _dump(before, ignore_docstrings) != _dump(after, ignore_docstrings):
+    if _dump(before, ignore_docstrings, ignore_stubs) != _dump(
+        after, ignore_docstrings, ignore_stubs
+    ):
         what = "code other than docstrings" if ignore_docstrings else "the code"
         raise ValidationError(f"output changed {what}")
 
@@ -57,13 +65,25 @@ def _is_docstring(stmt: ast.stmt) -> bool:
     )
 
 
-def _dump(tree: ast.Module, ignore_docstrings: bool) -> str:
-    if ignore_docstrings:
+def _dump(tree: ast.Module, ignore_docstrings: bool, ignore_stubs: bool = False) -> str:
+    if ignore_docstrings or ignore_stubs:
         tree = copy.deepcopy(tree)
         for node in ast.walk(tree):
-            if isinstance(node, _SCOPES) and node.body and _is_docstring(node.body[0]):
+            if not isinstance(node, _SCOPES):
+                continue
+            if ignore_docstrings and node.body and _is_docstring(node.body[0]):
                 node.body = node.body[1:]
+            if ignore_stubs and len(node.body) == 1 and _is_ellipsis(node.body[0]):
+                node.body = []
     return ast.dump(tree)
+
+
+def _is_ellipsis(stmt: ast.stmt) -> bool:
+    return (
+        isinstance(stmt, ast.Expr)
+        and isinstance(stmt.value, ast.Constant)
+        and stmt.value.value is Ellipsis
+    )
 
 
 def _hollow(tree: ast.Module) -> ast.Module:

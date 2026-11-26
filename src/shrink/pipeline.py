@@ -49,6 +49,7 @@ class Pipeline:
         reporter: Reporter | None = None,
         *,
         planner: Planner | None = None,
+        trailer: Document | None = None,
         warn: Callable[[str], None] = messages.warn,
     ) -> None:
         self._reader = reader
@@ -57,6 +58,7 @@ class Pipeline:
         self._writer = writer
         self._reporter = reporter
         self._planner = planner
+        self._trailer = trailer  # written after the last document (--brief)
         self._warn = warn
         self._warned: set[str] = set()
 
@@ -74,6 +76,11 @@ class Pipeline:
             if self._reporter is not None:
                 self._reporter.record(doc, out, steps)
             count += 1
+        if self._trailer is not None and count:
+            self._writer.write(self._trailer)
+            if self._reporter is not None:
+                empty = Document("", path=self._trailer.path)
+                self._reporter.record(empty, self._trailer, [Step("brief note", self._trailer)])
         if self._reporter is not None:
             self._reporter.finish()
         return count

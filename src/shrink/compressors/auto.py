@@ -11,6 +11,7 @@ from shrink.document import Document
 PYTHON_EXTENSIONS = (".py", ".pyi", ".pyw")
 JSON_EXTENSIONS = (".json", ".jsonl", ".ndjson", ".geojson")
 LOG_EXTENSIONS = (".log",)
+WEB_EXTENSIONS = (".js", ".mjs", ".cjs", ".jsx", ".css", ".html", ".htm")
 _DEFINITIONS = (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 _TARGETS = {
@@ -18,6 +19,7 @@ _TARGETS = {
     "json": "shrink.compressors.json_mode:JsonCompressor",
     "log": "shrink.compressors.log:LogCompressor",
     "text": "shrink.compressors.text:TextCompressor",
+    "web": "shrink.compressors.web:WebCompressor",
 }
 
 HELP = """\
@@ -27,6 +29,7 @@ Chooses a mode for every document separately:
          parses as Python and has an import, def or class at the top level
   json   files ending in .json, .jsonl, .ndjson or .geojson; unnamed input that
          starts with { or [ and parses as JSON or JSON Lines
+  web    files ending in .js, .mjs, .cjs, .jsx, .css, .html or .htm
   log    files ending in .log; unnamed input where most lines start with a
          timestamp
   text   everything else (source files in other languages only get text level 1)
@@ -52,6 +55,7 @@ def choose_mode(doc: Document) -> str:
             (PYTHON_EXTENSIONS, "code"),
             (JSON_EXTENSIONS, "json"),
             (LOG_EXTENSIONS, "log"),
+            (WEB_EXTENSIONS, "web"),
         ]
         return next((mode for exts, mode in by_extension if path.endswith(exts)), "text")
     from shrink.compressors.json_mode import looks_like_json
@@ -67,7 +71,7 @@ def choose_mode(doc: Document) -> str:
 
 class AutoCompressor:
     name = "auto"
-    summary = "choose code, json, log or text for each file"
+    summary = "choose code, web, json, log or text for each file"
     help = HELP
 
     def __init__(self, **overrides: Compressor) -> None:

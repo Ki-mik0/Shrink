@@ -49,7 +49,7 @@ _PRAGMA = re.compile(
 )
 _CODING = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*[-\w.]+")
 _LONE_CR = re.compile(r"\r(?!\n)")
-_SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
+_SENTENCE_END = re.compile(r"(?<!\be\.g)(?<!\bi\.e)(?<!\bcf)[.!?](?=\s|$)")  # not after e.g.
 MAX_SUMMARY_CHARS = 200
 _FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 _STRING_START = {
@@ -249,6 +249,36 @@ def shorten_docstrings(text: str) -> str:
             edits.append((start, end, literal))
     result = _apply(text, edits)
     validation.check_same_code(tree, result, ignore_docstrings=True)
+    return result
+
+
+@_with_bom
+def drop_docstrings(text: str) -> str:
+    """Remove module, class and function docstrings; a body left empty gets ``...``."""
+    tree = ast.parse(text)
+    src = _Source(text)
+    edits: list[tuple[int, int, str]] = []
+    for scope in _scopes(tree):
+        doc = _docstring(scope.body)
+        if doc is None:
+            continue
+        assert doc.end_lineno is not None
+        only = len(scope.body) == 1 and not isinstance(scope, ast.Module)
+        start, end = src.start_of(doc), src.end_of(doc)
+        line_start = src.starts[doc.lineno - 1]
+        line_end = src.starts[doc.end_lineno] if doc.end_lineno < len(src.starts) else len(text)
+        if not text[line_start:start].strip() and not text[end:line_end].strip():
+            # the docstring has its lines to itself: remove them whole
+            indent = text[line_start:start]
+            newline = "\r\n" if text[line_start:line_end].endswith("\r\n") else "\n"
+            if not only:  # and the blank line that separated it from the code
+                blank = re.match(r"[ \t\f]*\r?\n", text[line_end:])
+                line_end += blank.end() if blank else 0
+            edits.append((line_start, line_end, f"{indent}...{newline}" if only else ""))
+        else:
+            edits.append((start, end, "..." if only else ""))
+    result = _apply(text, edits)
+    validation.check_same_code(tree, result, ignore_docstrings=True, ignore_stubs=True)
     return result
 
 

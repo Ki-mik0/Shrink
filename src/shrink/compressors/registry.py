@@ -26,7 +26,7 @@ BUILTIN_MODES: tuple[ModeSpec, ...] = (
     ModeSpec(
         name="auto",
         target="shrink.compressors.auto:AutoCompressor",
-        summary="choose code, json, log or text for each file",
+        summary="choose code, web, json, log or text for each file",
     ),
     ModeSpec(
         name="code",
@@ -47,6 +47,11 @@ BUILTIN_MODES: tuple[ModeSpec, ...] = (
         name="text",
         target="shrink.compressors.text:TextCompressor",
         summary="normalise whitespace, drop duplicate paragraphs and markup noise",
+    ),
+    ModeSpec(
+        name="web",
+        target="shrink.compressors.web:WebCompressor",
+        summary="JavaScript, CSS, HTML: comments, JSDoc, CSS minification, function bodies",
     ),
 )
 

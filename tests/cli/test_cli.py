@@ -34,6 +34,7 @@ def test_list_modes(runner: CliRunner) -> None:
         "json",
         "log",
         "text",
+        "web",
     ]
 
 
@@ -205,3 +206,23 @@ def test_mode_chain_rejects_an_unknown_member(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["--mode", "text,nope"], input="x")
     assert result.exit_code == 2
     assert "'nope' is not one of" in result.stderr
+
+
+def test_brief_adds_the_note_after_the_output(runner: CliRunner) -> None:
+    from shrink.brief import BRIEF_NOTE
+
+    result = runner.invoke(cli, ["--level", "1", "--brief"], input=PACKED)
+    assert result.stdout.endswith("---\n" + BRIEF_NOTE)
+    assert result.stdout.count(BRIEF_NOTE) == 1
+
+
+def test_brief_cost_is_in_the_stats(runner: CliRunner) -> None:
+    result = runner.invoke(cli, ["--level", "1", "--brief", "--stats"], input=PACKED)
+    assert "2 documents" in result.stderr
+    assert "brief note" in result.stderr
+    assert "(new," in result.stderr
+
+
+def test_brief_without_input_writes_nothing(runner: CliRunner) -> None:
+    result = runner.invoke(cli, ["--brief"], input="")
+    assert result.stdout == ""

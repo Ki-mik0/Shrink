@@ -123,7 +123,7 @@ def make_counter(encoding: str = DEFAULT_ENCODING) -> TokenCounter:
 
 def format_change(before: int, after: int) -> str:
     if before == 0:
-        return "0.0%"
+        return "new" if after else "0.0%"
     return f"{(after - before) / before * 100:+.1f}%"
 
 
@@ -190,7 +190,8 @@ class StatsReporter:
         self.steps: dict[str, list[int]] = {}
 
     def record(self, before: Document, after: Document, steps: Sequence[Step] = ()) -> None:
-        self.documents += 1
+        if before.full_text:  # an added note (--brief) is not an input document
+            self.documents += 1
         count_before = self._counter.count(before.full_text)
         self.tokens_before += count_before
         if not steps:

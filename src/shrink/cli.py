@@ -24,6 +24,7 @@ from shrink.pipeline import Pipeline, Reporter
 
 if TYPE_CHECKING:
     from shrink.compressors.base import Compressor
+    from shrink.document import Document
     from shrink.observability.stats import Price
     from shrink.pipeline import Planner
 from shrink.observability import DEFAULT_ENCODING, ENCODINGS, STATS_FORMATS
@@ -161,15 +162,31 @@ def _build_planner(
     )
 
 
-def _build_compressor(mode: list[str], translate: bool, languages: str | None) -> Compressor:
+def _brief_note() -> Document:
+    from shrink.brief import brief_document
+
+    return brief_document()
+
+
+def _build_compressor(
+    mode: list[str], translate: bool, languages: str | None, no_docs: bool = False
+) -> Compressor:
     compressor = default_registry.create_chain(mode)
-    if not translate:
+    if not (translate or no_docs):
         return compressor
     from shrink.compressors.chain import ChainCompressor
-    from shrink.compressors.translate import TranslateCompressor
 
-    only = frozenset(code.strip() for code in languages.split(",")) if languages else None
-    return ChainCompressor([compressor, TranslateCompressor(only=only)])
+    members = [compressor]
+    if no_docs:
+        from shrink.compressors.nodocs import NoDocsCompressor
+
+        members.append(NoDocsCompressor())
+    if translate:
+        from shrink.compressors.translate import TranslateCompressor
+
+        only = frozenset(code.strip() for code in languages.split(",")) if languages else None
+        members.append(TranslateCompressor(only=only))
+    return ChainCompressor(members)
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -268,6 +285,18 @@ def _build_compressor(mode: list[str], translate: bool, languages: str | None) -
     "never cuts text off. Reads the whole input before writing.",
 )
 @click.option(
+    "--no-docs",
+    is_flag=True,
+    help="After the mode, drop Python docstrings and JSDoc comments too (names, "
+    "parameters and types stay); with --level 3 only signatures are left.",
+)
+@click.option(
+    "--brief",
+    is_flag=True,
+    help="Add a short note after the output asking the model for a terse answer "
+    "(no comments, docstrings or prose around code); saves output tokens.",
+)
+@click.option(
     "--diff",
     is_flag=True,
     help="Print a unified diff of every file to stderr, then the --stats report.",
@@ -307,6 +336,8 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
     translate_from: str | None,
     query: str | None,
     budget: int | None,
+    no_docs: bool,
+    brief: bool,
     diff: bool,
     debug: bool,
 ) -> None:
@@ -321,6 +352,7 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
       shrink --download tokenizer      # once, for exact offline token counts
       cat notes_uk.md | shrink --translate --stats
       files-to-prompt src | shrink -l 3 --query "token counting" --budget 4000
+      files-to-prompt src | shrink -l 3 --brief | llm "add a /todos endpoint"
 
     \b
     Other commands:
@@ -339,10 +371,11 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
         pipeline = Pipeline(
             reader=StdinReader(),
             splitter=make_splitter(fmt, delimiter),
-            compressor=_build_compressor(mode, translate, translate_from),
+            compressor=_build_compressor(mode, translate, translate_from, no_docs),
             writer=StdoutWriter(),
             reporter=_build_reporter(stats, diff, encoding, parsed_price),
             planner=_build_planner(query, budget, encoding, bool(stats or diff)),
+            trailer=_brief_note() if brief else None,
         )
         pipeline.run(level)
     except KeyboardInterrupt:
