@@ -6,8 +6,10 @@ answer: user accounts and personal todo lists from the database migration to
 the frontend pages (``eval/generation/task.md``). The project is sent in five
 variants, as in the quality eval: original, shrink level 1, 2, 3 and level 3
 with ``--query`` (the task text as the query), plus level 3 with ``--brief``
-(a note asking for a terse answer, which targets the output tokens) and level 3
-with ``--no-docs --brief`` (no docstrings or JSDoc left in the context either).
+(a note asking for a terse answer, which targets the output tokens), level 3
+with ``--no-docs --brief`` (no docstrings or JSDoc left in the context either)
+and level 3 with ``--brief`` plus a note after the task asking for SEARCH/REPLACE
+edits instead of whole existing files (``+edits``).
 
 For every answer it records input tokens (exact o200k_base and what the
 provider counted), output tokens, whether the answer was cut off, the time it
@@ -20,7 +22,7 @@ Every answer stores a hash of its prompt: when shrink changes and a variant's
 prompt is no longer the same, the next run moves that answer aside and asks again.
 
     python eval/run_generation.py --dry-run   # prompt sizes only, no network
-    python eval/run_generation.py             # 7 requests (one per variant)
+    python eval/run_generation.py             # 8 requests (one per variant)
     python eval/run_generation.py --runs 3    # more runs to average the output
     python eval/run_generation.py --runs 3 --variants original,L3,L3+brief
     python eval/run_generation.py --report    # rebuild the table from saved answers
@@ -46,7 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_quality as rq
 from corpus import python_version
 
-from shrink.brief import BRIEF_NOTE
+from shrink.brief import BRIEF_NOTE, EDITS_NOTE
 from shrink.compressors.auto import AutoCompressor
 from shrink.compressors.chain import ChainCompressor
 from shrink.compressors.nodocs import NoDocsCompressor
@@ -62,7 +64,8 @@ TASK = HERE / "generation" / "task.md"
 RESULTS = HERE / "results"
 MAX_TOKENS = 16000
 ALLOWED_ROOTS = ("backend/", "frontend/")
-VARIANTS = [*rq.VARIANTS, "L3+brief", "L3+no-docs+brief"]
+VARIANTS = [*rq.VARIANTS, "L3+brief", "L3+no-docs+brief", "L3+brief+edits"]
+_FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.M | re.S)
 
 SYSTEM = (
     "You are a senior full-stack engineer working in an existing repository. "
@@ -132,6 +135,7 @@ def build_context(variant: str) -> str:
     """The repository as files-to-prompt text, compressed like the quality eval;
     ``+brief`` adds the note ``shrink --brief`` writes after its output."""
     corpus = rq.Corpus("taskboard", starter_files(), [{"q": task_text()}])
+    variant = variant.removesuffix("+edits")  # the edits note goes after the task
     note = BRIEF_NOTE if variant.endswith("+brief") else ""
     base = variant.removesuffix("+brief")
     if base.endswith("+no-docs"):
@@ -153,7 +157,9 @@ def build_prompt(context: str) -> str:
 
 
 def prompt_for(variant: str) -> str:
-    return build_prompt(build_context(variant))
+    """``+edits``: :data:`EDITS_NOTE` after the task, where an agent proxy would add it."""
+    prompt = build_prompt(build_context(variant))
+    return prompt + EDITS_NOTE if variant.endswith("+edits") else prompt
 
 
 def prompt_hash(prompt: str) -> str:
@@ -199,6 +205,10 @@ def parse_answer(text: str) -> Answer:
         path = item.path.replace("\\", "/")
         edits += len(item.edits)
         base = files.get(path, starter.get(path))
+        whole = _FENCE.search(item.body)
+        if not item.edits and whole is not None and safe_path(path):
+            files[path] = whole.group(1)  # an "Edit" section holding the whole file
+            continue
         if not safe_path(path) or base is None or not item.edits:
             failed += max(len(item.edits), 1)
             continue
@@ -238,12 +248,19 @@ def raw_path(model: str, variant: str, run: int) -> Path:
 
 def archive(model: str, variant: str) -> None:
     folder = raw_path(model, "x", 0).parent
-    target = folder / "previous" / variant.replace("+", "_")
     moved = 0
-    for path in folder.glob(f"{variant.replace('+', '_')}--*.json"):
+    for path in sorted(folder.glob(f"{variant.replace('+', '_')}--*.json")):
+        # one folder per prompt, so answers to different prompts never overwrite each other
+        sha = json.loads(path.read_text(encoding="utf-8")).get("prompt_sha256") or "unknown"
+        target = folder / "previous" / variant.replace("+", "_") / sha
         target.mkdir(parents=True, exist_ok=True)
-        path.replace(target / path.name)
+        name, n = path.name, 1
+        while (target / name).exists():
+            n += 1
+            name = f"{path.stem}-{n}.json"
+        path.replace(target / name)
         moved += 1
+    target = folder / "previous" / variant.replace("+", "_")
     print(f"{moved} saved answer(s) for {variant} moved to {target}")
 
 

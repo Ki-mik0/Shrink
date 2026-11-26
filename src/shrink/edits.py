@@ -43,6 +43,7 @@ class Edit:
 class FileEdits:
     path: str
     edits: list[Edit]
+    body: str = ""  # the section as written, for answers that put a whole file there
 
 
 class EditError(ValueError):
@@ -62,7 +63,7 @@ def split_edits(text: str) -> tuple[str, list[FileEdits]]:
         kept.append(text[pos : header.start()])
         body = text[header.end() : end]
         edits = [Edit(m["search"], m["replace"]) for m in _BLOCK.finditer(body)]
-        found.append(FileEdits(header["path"].strip().strip("`"), edits))
+        found.append(FileEdits(header["path"].strip().strip("`"), edits, body))
         pos = end
     kept.append(text[pos:])
     return "".join(kept), found

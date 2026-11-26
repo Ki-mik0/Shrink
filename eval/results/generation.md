@@ -10,10 +10,8 @@ Input tokens: whole prompt, o200k_base. Output tokens: as counted by the provide
 | L2 | 8148 | -29.5% | 8111 | 16259 | -20.3% | 0/1 | 100% | 4/4 | — | 196 |
 | L3 | 5136 | -55.6% | 10556 | 15692 | -23.1% | 1/3 | 92% | 12/12 | — | 1546 |
 | L3+query | 8606 | -25.5% | 8916 | 17522 | -14.1% | 0/1 | 100% | 4/4 | — | 316 |
-| L3+brief (stale) | 5273 | -54.4% | 7703 | 12976 | -36.4% | 0/3 | 97% | 12/12 | — | 212 |
-| L3+no-docs+brief (stale) | 4343 | -62.4% | 9659 | 14002 | -31.4% | 0/3 | 67% | 10/10 | — | 165 |
-
-(stale): the answer was given for an older prompt (shrink has changed since); run the eval again to replace it.
+| L3+brief | 5200 | -55.0% | 7703 | 12903 | -36.8% | 0/3 | 97% | 12/12 | — | 212 |
+| L3+no-docs+brief | 4270 | -63.0% | 9659 | 13929 | -31.7% | 0/3 | 67% | 10/10 | — | 165 |
 
 ## Missing parts
 

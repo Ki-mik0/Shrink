@@ -143,7 +143,7 @@ def test_run_saves_answers_and_reports(tmp_path: Path, monkeypatch: pytest.Monke
 
     def fake_ask(model: str, prompt: str, key: str, **kwargs: Any) -> dict[str, Any]:
         calls.append(kwargs)
-        reason = "length" if len(calls) == 7 else "stop"
+        reason = "length" if len(calls) == 8 else "stop"
         return {
             "choices": [{"message": {"content": COMPLETE_ANSWER}, "finish_reason": reason}],
             "usage": {"prompt_tokens": 100, "completion_tokens": 900},
@@ -151,11 +151,11 @@ def test_run_saves_answers_and_reports(tmp_path: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr(gen.rq, "ask", fake_ask)
     gen.run("fake/model", 1, dry_run=False)
-    assert len(calls) == 7
+    assert len(calls) == 8
     assert calls[0]["max_tokens"] == gen.MAX_TOKENS
     assert calls[0]["system"] == gen.SYSTEM
     gen.run("fake/model", 1, dry_run=False)
-    assert len(calls) == 7  # saved answers are not asked again
+    assert len(calls) == 8  # saved answers are not asked again
     table = (tmp_path / "generation.md").read_text(encoding="utf-8")
     assert "| original |" in table
     assert "| L3+query |" in table
@@ -173,7 +173,7 @@ def test_redo_moves_answers_aside(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     path.write_text("{}", encoding="utf-8")
     gen.archive("m/x", "L3")
     assert not path.exists()
-    assert (path.parent / "previous" / "L3" / "L3--1.json").is_file()
+    assert (path.parent / "previous" / "L3" / "unknown" / "L3--1.json").is_file()
 
 
 def test_dry_run_needs_no_key(
@@ -183,7 +183,7 @@ def test_dry_run_needs_no_key(
     gen.run("fake/model", 1, dry_run=True)
     out = capsys.readouterr().out
     assert "original" in out
-    assert "7 request(s)" in out
+    assert "8 request(s)" in out
 
 
 def test_progress_is_reported_while_the_answer_streams(
@@ -243,7 +243,7 @@ def test_answer_for_an_older_prompt_is_asked_again(
     assert "| L3 (stale) |" in (tmp_path / "generation.md").read_text(encoding="utf-8")
     gen.run("m/x", 1, dry_run=False)
     assert len(asked) == 3  # only L3 again
-    assert (old.parent / "previous" / "L3" / "L3--1.json").is_file()
+    assert (old.parent / "previous" / "L3" / "an older prompt" / "L3--1.json").is_file()
     assert "stale" not in (tmp_path / "generation.md").read_text(encoding="utf-8")
 
 
@@ -286,3 +286,28 @@ def test_edits_are_applied_to_the_real_starter_files() -> None:
     assert "backend/app/db.py" not in parsed.files
     assert (parsed.edits, parsed.edits_failed) == (3, 1)
     assert gen.completeness(parsed)["python_valid"] == 2
+
+
+def test_edits_variant_puts_the_note_after_the_task() -> None:
+    from shrink.brief import EDITS_NOTE
+
+    prompt = gen.prompt_for("L3+brief+edits")
+    assert prompt == gen.prompt_for("L3+brief") + EDITS_NOTE
+
+
+def test_edit_section_holding_a_whole_file_counts_as_the_file() -> None:
+    answer = "## Edit: backend/app/db.py\n```python\nMIGRATIONS = []\n```\n"
+    parsed = gen.parse_answer(answer)
+    assert parsed.files["backend/app/db.py"] == "MIGRATIONS = []\n"
+    assert (parsed.edits, parsed.edits_failed) == (0, 0)
+
+
+def test_archive_never_overwrites(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gen, "RESULTS", tmp_path)
+    for text in ('{"prompt_sha256": "a"}', '{"prompt_sha256": "a"}'):
+        path = gen.raw_path("m/x", "L3", 1)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        gen.archive("m/x", "L3")
+    kept = sorted((path.parent / "previous" / "L3" / "a").iterdir())
+    assert [p.name for p in kept] == ["L3--1-2.json", "L3--1.json"]
