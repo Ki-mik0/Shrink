@@ -143,7 +143,7 @@ def test_run_saves_answers_and_reports(tmp_path: Path, monkeypatch: pytest.Monke
 
     def fake_ask(model: str, prompt: str, key: str, **kwargs: Any) -> dict[str, Any]:
         calls.append(kwargs)
-        reason = "length" if len(calls) == 8 else "stop"
+        reason = "length" if len(calls) == len(gen.VARIANTS) else "stop"
         return {
             "choices": [{"message": {"content": COMPLETE_ANSWER}, "finish_reason": reason}],
             "usage": {"prompt_tokens": 100, "completion_tokens": 900},
@@ -151,12 +151,12 @@ def test_run_saves_answers_and_reports(tmp_path: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr(gen.rq, "ask", fake_ask)
     gen.run("fake/model", 1, dry_run=False)
-    assert len(calls) == 8
+    assert len(calls) == len(gen.VARIANTS)
     assert calls[0]["max_tokens"] == gen.MAX_TOKENS
     assert calls[0]["system"] == gen.SYSTEM
     gen.run("fake/model", 1, dry_run=False)
-    assert len(calls) == 8  # saved answers are not asked again
-    table = (tmp_path / "generation.md").read_text(encoding="utf-8")
+    assert len(calls) == len(gen.VARIANTS)  # saved answers are not asked again
+    table = gen.report_path("fake/model").read_text(encoding="utf-8")
     assert "| original |" in table
     assert "| L3+query |" in table
     assert "| L3+brief |" in table
@@ -183,7 +183,7 @@ def test_dry_run_needs_no_key(
     gen.run("fake/model", 1, dry_run=True)
     out = capsys.readouterr().out
     assert "original" in out
-    assert "8 request(s)" in out
+    assert f"{len(gen.VARIANTS)} request(s)" in out
 
 
 def test_progress_is_reported_while_the_answer_streams(
@@ -240,11 +240,11 @@ def test_answer_for_an_older_prompt_is_asked_again(
     record["prompt_sha256"] = "an older prompt"
     old.write_text(json.dumps(record), encoding="utf-8")
     gen.report("m/x")
-    assert "| L3 (stale) |" in (tmp_path / "generation.md").read_text(encoding="utf-8")
+    assert "| L3 (stale) |" in gen.report_path("m/x").read_text(encoding="utf-8")
     gen.run("m/x", 1, dry_run=False)
     assert len(asked) == 3  # only L3 again
     assert (old.parent / "previous" / "L3" / "an older prompt" / "L3--1.json").is_file()
-    assert "stale" not in (tmp_path / "generation.md").read_text(encoding="utf-8")
+    assert "stale" not in gen.report_path("m/x").read_text(encoding="utf-8")
 
 
 def test_variants_limits_the_run(
@@ -311,3 +311,83 @@ def test_archive_never_overwrites(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
         gen.archive("m/x", "L3")
     kept = sorted((path.parent / "previous" / "L3" / "a").iterdir())
     assert [p.name for p in kept] == ["L3--1-2.json", "L3--1.json"]
+
+
+def test_each_model_gets_its_own_report(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gen, "RESULTS", tmp_path)
+    assert gen.report_path(gen.rq.DEFAULT_MODEL) == tmp_path / "generation.md"
+    assert gen.report_path("particle-ai/particle-1:free") == (
+        tmp_path / "generation-particle-ai_particle-1_free.md"
+    )
+
+
+def test_reasoning_setting_is_saved_and_a_change_asks_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(gen, "RESULTS", tmp_path)
+    monkeypatch.setattr(gen.rq, "PAUSE", 0)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    seen: list[str] = []
+
+    def fake_ask(model: str, prompt: str, key: str, **kwargs: Any) -> dict[str, Any]:
+        seen.append(kwargs["reasoning"])
+        return {
+            "choices": [{"message": {"content": COMPLETE_ANSWER}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 900},
+        }
+
+    monkeypatch.setattr(gen.rq, "ask", fake_ask)
+    gen.run("m/x", 1, dry_run=False, only=["L3"])
+    gen.run("m/x", 1, dry_run=False, only=["L3"])  # same setting: nothing asked
+    gen.run("m/x", 1, dry_run=False, only=["L3"], reasoning="none")
+    assert seen == ["low", "none"]
+    record = json.loads(gen.raw_path("m/x", "L3", 1).read_text(encoding="utf-8"))
+    assert record["reasoning"] == "none"
+    assert "Reasoning effort: none." in gen.report_path("m/x").read_text(encoding="utf-8")
+
+
+def test_lazy_and_dedent_prompts() -> None:
+    from shrink.brief import BRIEF_NOTE, DEDENT_NOTE, LAZY_NOTE
+
+    lazy = gen.prompt_for("L3+brief+lazy")
+    assert lazy == gen.prompt_for("L3+brief") + LAZY_NOTE
+    dedent = gen.prompt_for("L3+dedent+brief+lazy")
+    assert dedent.endswith(gen.task_text() + DEDENT_NOTE + LAZY_NOTE)
+    context = gen.build_context("L3+dedent+brief+lazy")
+    assert context.endswith(BRIEF_NOTE)
+    assert "\n def " in context and "\n    def " not in context  # one space per level
+
+
+def test_lazy_answers_are_restored_like_shrink_apply() -> None:
+    starter = dict(gen.starter_files())
+    db = starter["backend/app/db.py"]
+    assert "MIGRATIONS: list[str] = [" in db
+    lazy = "\n".join(
+        [
+            "## File: backend/app/db.py",
+            f"{FENCE}python",
+            "...",
+            "",
+            "MIGRATIONS: list[str] = ['CREATE TABLE users (id INTEGER)',",
+            " 'CREATE TABLE todos (id INTEGER)']",
+            "",
+            "...",
+            FENCE,
+            "## File: backend/app/routers/todos.py",
+            f"{FENCE}python",
+            "def later():",
+            " ...",
+            FENCE,
+        ]
+    )
+    plain = gen.parse_answer(lazy)
+    assert plain.files["backend/app/db.py"].startswith("...")
+    answer = gen.answer_of("L3+brief+lazy", lazy)
+    restored = answer.files["backend/app/db.py"]
+    assert "def get_db" in restored and "CREATE TABLE todos" in restored
+    assert answer.restored == 1
+    assert answer.stubs_left == 1  # later() has nothing to be filled in from
+    broken = lazy.replace("...\n\nMIGRATIONS", "def broken(:\n\nMIGRATIONS")
+    assert gen.answer_of("L3+brief+lazy", broken).restore_failed == 1
+    checks = gen.completeness(answer)
+    assert checks["restored"] == 1 and checks["stubs_left"] == 1

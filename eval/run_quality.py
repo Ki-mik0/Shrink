@@ -117,6 +117,7 @@ def ask(
     system: str = SYSTEM,
     max_tokens: int | None = None,
     on_chunk: Callable[[int], None] | None = None,
+    reasoning: str = "low",
 ) -> dict[str, Any]:
     request_body: dict[str, Any] = {
         "model": model,
@@ -128,7 +129,7 @@ def ask(
         # Streamed, so a long answer arrives in pieces instead of one response a
         # gateway may cut off; reasoning models think briefly and keep it to themselves.
         "stream": True,
-        "reasoning": {"effort": "low", "exclude": True},
+        "reasoning": {"effort": reasoning, "exclude": True},
     }
     if max_tokens is not None:
         request_body["max_tokens"] = max_tokens
