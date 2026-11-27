@@ -24,3 +24,4 @@ coverage.xml
 .idea/
 Thumbs.db
 .DS_Store
+eval/results/.works-cache.json

@@ -15,6 +15,13 @@ import run_generation as gen
 
 FENCE = "`" * 3
 
+
+@pytest.fixture(autouse=True)
+def no_behaviour_checks(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Running the app for every fake answer takes seconds; test_functional.py does."""
+    monkeypatch.setattr(gen.functional, "available", lambda: False)
+
+
 COMPLETE_ANSWER = "\n".join(
     [
         "## File: backend/app/routers/auth.py",
@@ -391,3 +398,34 @@ def test_lazy_answers_are_restored_like_shrink_apply() -> None:
     assert gen.answer_of("L3+brief+lazy", broken).restore_failed == 1
     checks = gen.completeness(answer)
     assert checks["restored"] == 1 and checks["stubs_left"] == 1
+
+
+def test_keep_patch_variant_shows_the_functions_the_task_names() -> None:
+    from shrink.brief import BRIEF_NOTE, DEDENT_NOTE, PATCH_NOTE
+
+    assert gen.named_in_task() == {"create_app"}
+    context = gen.build_context("L3+keep+dedent+brief+patch")
+    assert context.endswith(BRIEF_NOTE)
+    assert "app.include_router(health.router)" in context
+    assert "def get_db() -> Iterator[sqlite3.Connection]:" in context
+    prompt = gen.prompt_for("L3+keep+dedent+brief+patch")
+    assert prompt.endswith(gen.task_text() + DEDENT_NOTE + PATCH_NOTE)
+
+
+def test_works_is_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gen, "RESULTS", tmp_path)
+    monkeypatch.setattr(gen.functional, "available", lambda: True)
+    runs: list[dict[str, str]] = []
+
+    def fake(files: dict[str, str]) -> dict[str, str | None]:
+        runs.append(files)
+        return {"a": None, "b": "broke"}
+
+    monkeypatch.setattr(gen.functional, "run_checks", fake)
+    answer = gen.parse_answer(COMPLETE_ANSWER)
+    assert gen.works(answer.files) == gen.works(answer.files) == {"a": None, "b": "broke"}
+    assert len(runs) == 1
+    cell, broken = gen._works_cell("v", [answer])
+    assert cell == "50%" and broken == ["v: b"]
+    monkeypatch.setattr(gen.functional, "available", lambda: False)
+    assert gen._works_cell("v", [answer]) == ("—", [])

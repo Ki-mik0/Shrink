@@ -13,6 +13,8 @@ edits instead of whole existing files (``+edits``), and the two notes that
 ``shrink apply`` undoes: ``+lazy`` (existing files come back shortened, with
 stub bodies and ``...`` gaps) and ``+dedent`` (the context and the answer in a
 compact layout: Python with one space per level, JS/HTML/CSS unindented).
+``+keep`` leaves the functions the task names in code (``create_app()``) whole
+in the context (``shrink --keep``), and ``+patch`` asks for ``## Patch:`` blocks.
 
 For every answer it records input tokens (exact o200k_base and what the
 provider counted), output tokens, whether the answer was cut off, the time it
@@ -21,10 +23,17 @@ the required files and endpoints are present and whether the Python parses.
 With ``+edits`` the model gives changes to existing files as SEARCH/REPLACE
 edits; they are applied to the starter project's real files (as a tool would)
 and the checks run on the result; edits that do not apply are counted. With
-``+lazy`` and ``+dedent`` every file of the answer goes through
-:func:`shrink.restore.restore`, exactly as ``shrink apply`` would write it, and
-the checks run on the restored files; stubs left with nothing to fill them in
-are counted (an unfinished answer, not a saving).
+``+lazy``, ``+dedent`` and ``+patch`` the answer goes through what
+``shrink apply --context`` does, given the variant's own context: patches and
+gaps are merged with the starter's files, and a function the model only saw as
+a stub keeps the starter's code (counted as "invented bodies rejected"). Stubs
+left with nothing to fill them in are counted (an unfinished answer, not a
+saving).
+
+Two accuracy columns: "Complete" is the keyword check (the required files and
+endpoints are there), "Works" runs the app: the share of the behaviour checks
+in ``eval/generation/functional.py`` that pass (needs
+``pip install -r eval/requirements-generation.txt``).
 Every answer stores a hash of its prompt: when shrink changes and a variant's
 prompt is no longer the same, the next run moves that answer aside and asks again.
 
@@ -52,21 +61,22 @@ from statistics import mean
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "generation"))
 
+import functional
 import run_quality as rq
 from corpus import python_version
 
-from shrink.brief import BRIEF_NOTE, DEDENT_NOTE, EDITS_NOTE, LAZY_NOTE
+from shrink.apply import answer_sections, context_files, merge_sections
+from shrink.brief import BRIEF_NOTE, DEDENT_NOTE, EDITS_NOTE, LAZY_NOTE, PATCH_NOTE
 from shrink.compressors.auto import AutoCompressor
 from shrink.compressors.chain import ChainCompressor
 from shrink.compressors.dedent import DedentCompressor
+from shrink.compressors.keep import KeepCompressor
 from shrink.compressors.nodocs import NoDocsCompressor
 from shrink.document import Document
 from shrink.edits import EditError, apply_edits, split_edits
 from shrink.observability.stats import make_counter
-from shrink.restore import RestoreError, restore
-from shrink.splitting.formats import FORMATS
-from shrink.splitting.framed import FramedSplitter
 
 HERE = Path(__file__).resolve().parent
 STARTER = HERE / "generation" / "starter"
@@ -83,7 +93,10 @@ VARIANTS = [
     "L3+brief+edits",
     "L3+brief+lazy",
     "L3+dedent+brief+lazy",
+    "L3+keep+dedent+brief+patch",
 ]
+#: Variants whose answers a user would write with ``shrink apply``.
+APPLIED = ("+lazy", "+dedent", "+patch")
 _FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.M | re.S)
 
 SYSTEM = (
@@ -136,6 +149,7 @@ class Answer:
     rejected: list[str]  # paths outside the repository or otherwise unsafe
     edits: int = 0  # SEARCH/REPLACE edits in the answer (+edits)
     edits_failed: int = 0
+    reverted: int = 0  # invented bodies shrink apply rejected
     restored: int = 0  # files where shrink apply filled something in (+lazy)
     restore_failed: int = 0  # files shrink apply could not merge
     stubs_left: int = 0  # function bodies left as `...` with nothing to fill them in
@@ -157,21 +171,33 @@ def build_context(variant: str) -> str:
     """The repository as files-to-prompt text, compressed like the quality eval;
     ``+brief`` adds the note ``shrink --brief`` writes after its output."""
     corpus = rq.Corpus("taskboard", starter_files(), [{"q": task_text()}])
-    # The edits and lazy notes go after the task.
-    variant = variant.removesuffix("+edits").removesuffix("+lazy")
+    # The edits, lazy and patch notes go after the task.
+    for suffix in ("+edits", "+lazy", "+patch"):
+        variant = variant.removesuffix(suffix)
     note = BRIEF_NOTE if variant.endswith("+brief") else ""
-    base = variant.removesuffix("+brief")
-    if base.endswith("+no-docs"):
-        return context_with(int(base[1]), NoDocsCompressor()) + note
-    if base.endswith("+dedent"):
-        return context_with(int(base[1]), DedentCompressor()) + note
-    return rq.build_context(corpus, base) + note
+    base, *features = variant.removesuffix("+brief").split("+")
+    if features and features != ["query"]:
+        return context_with(int(base[1]), features) + note
+    return rq.build_context(corpus, variant.removesuffix("+brief")) + note
 
 
-def context_with(level: int, step: Any) -> str:
-    """``shrink --level N`` plus one step (``--no-docs``, ``--dedent``) over the
+def named_in_task() -> frozenset[str]:
+    """The functions the task names in code (``create_app()``): what a user would
+    pass to ``shrink --keep``."""
+    return frozenset(re.findall(r"`(\w+)\(\)`", task_text()))
+
+
+def context_with(level: int, features: list[str]) -> str:
+    """``shrink --level N`` with ``--keep``, ``--no-docs`` or ``--dedent`` over the
     starter, framed like the other variants."""
-    compressor = ChainCompressor([AutoCompressor(), step])
+    steps: list[Any] = [AutoCompressor()]
+    if "no-docs" in features:
+        steps.append(NoDocsCompressor())
+    if "dedent" in features:
+        steps.append(DedentCompressor())
+    compressor: Any = ChainCompressor(steps)
+    if "keep" in features:
+        compressor = KeepCompressor(compressor, named_in_task())
     docs = [
         compressor.compress(Document(text, path=label), level) for label, text in starter_files()
     ]
@@ -189,8 +215,11 @@ def prompt_for(variant: str) -> str:
     prompt = build_prompt(build_context(variant))
     if variant.endswith("+edits"):
         return prompt + EDITS_NOTE
+    dedent = DEDENT_NOTE if "+dedent" in variant else ""
     if variant.endswith("+lazy"):
-        return prompt + (DEDENT_NOTE if "+dedent" in variant else "") + LAZY_NOTE
+        return prompt + dedent + LAZY_NOTE
+    if variant.endswith("+patch"):
+        return prompt + dedent + PATCH_NOTE
     return prompt
 
 
@@ -219,22 +248,21 @@ def safe_path(path: str) -> bool:
     )
 
 
-def parse_answer(text: str, restore_files: bool = False) -> Answer:
+def parse_answer(text: str, shown: dict[str, str] | None = None) -> Answer:
     """Split '## File: path' + fenced block answers into files; apply '## Edit: path'
     SEARCH/REPLACE blocks to the starter project's real files, as a tool would.
-    ``restore_files``: run every file through what ``shrink apply`` does."""
+    ``shown`` (the files of the context): merge every section as
+    ``shrink apply --context`` does."""
     files: dict[str, str] = {}
     rejected: list[str] = []
     text, file_edits = split_edits(text)
-    splitter = FramedSplitter(FORMATS["repomix-markdown"])
-    for doc in splitter.split(text.splitlines(keepends=True)):
-        if doc.path is None:
-            continue
-        path = doc.path.strip().strip("`").replace("\\", "/")
-        if safe_path(path):
-            files[path] = doc.text
+    sections = []
+    for section in answer_sections(text):
+        if safe_path(section.path):
+            sections.append(section)
+            files[section.path] = section.content
         else:
-            rejected.append(path)
+            rejected.append(section.path)
     starter = dict(starter_files())
     edits = failed = 0
     for item in file_edits:
@@ -252,19 +280,23 @@ def parse_answer(text: str, restore_files: bool = False) -> Answer:
             files[path] = apply_edits(base, item.edits)
         except EditError:
             failed += len(item.edits)
-    if not restore_files:
+    if shown is None:
         return Answer(files, rejected, edits, failed)
-    restored = restore_failed = stubs = 0
-    for path, content in list(files.items()):
-        try:
-            result = restore(starter.get(path), content, path)
-        except RestoreError:
-            restore_failed += 1
-            continue
-        files[path] = result.text
-        restored += result.report.restored
-        stubs += len(result.report.unresolved)
-    return Answer(files, rejected, edits, failed, restored, restore_failed, stubs)
+    merged, errors = merge_sections(sections, starter.get, shown)
+    reports = [result.report for result in merged.values()]
+    files.update({path: result.text for path, result in merged.items()})
+    for path in errors:  # shrink apply would not write this file
+        files.pop(path, None)
+    return Answer(
+        files,
+        rejected,
+        edits,
+        failed,
+        restored=sum(report.restored for report in reports),
+        restore_failed=len(errors),
+        stubs_left=sum(len(report.unresolved) for report in reports),
+        reverted=sum(len(report.reverted) for report in reports),
+    )
 
 
 def completeness(answer: Answer) -> dict[str, Any]:
@@ -286,6 +318,7 @@ def completeness(answer: Answer) -> dict[str, Any]:
         "python_valid": parsed,
         "edits": answer.edits,
         "edits_failed": answer.edits_failed,
+        "reverted": answer.reverted,
         "restored": answer.restored,
         "restore_failed": answer.restore_failed,
         "stubs_left": answer.stubs_left,
@@ -294,7 +327,25 @@ def completeness(answer: Answer) -> dict[str, Any]:
 
 def answer_of(variant: str, content: str) -> Answer:
     """The files of an answer as the variant's tooling would write them."""
-    return parse_answer(content, restore_files="+lazy" in variant or "+dedent" in variant)
+    if not any(feature in variant for feature in APPLIED):
+        return parse_answer(content)
+    return parse_answer(content, shown=context_files(build_context(variant)))
+
+
+def works(files: dict[str, str]) -> dict[str, str | None] | None:
+    """:func:`functional.run_checks`, remembered per answer: a run takes seconds."""
+    if not functional.available():
+        return None
+    checker = Path(functional.__file__).read_bytes()
+    key = hashlib.sha256(checker + json.dumps(files, sort_keys=True).encode()).hexdigest()
+    cache = RESULTS / ".works-cache.json"
+    known = json.loads(cache.read_text(encoding="utf-8")) if cache.is_file() else {}
+    if key not in known:
+        known[key] = functional.run_checks(files)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(known), encoding="utf-8")
+    result: dict[str, str | None] = known[key]
+    return result
 
 
 def report_path(model: str) -> Path:
@@ -432,17 +483,92 @@ def percent(new: float, base: float) -> str:
     return f"{(new - base) / base * 100:+.1f}%" if base else "—"
 
 
-def report(model: str) -> None:
+@dataclass(frozen=True)
+class Row:
+    """What the table says about one variant's answers, and why some of them fail."""
+
+    cells: list[str]
+    total: float
+    missing: list[str]  # keyword checks that failed, one line per answer
+    broken: list[str]  # behaviour checks that failed, one line per answer
+
+
+def _restored_cell(variant: str, checks: list[dict[str, Any]]) -> str:
+    if not any(feature in variant for feature in APPLIED):
+        return "—"
+    parts = [f"{sum(c['restored'] for c in checks)} files"]
+    for key, label in (
+        ("restore_failed", "failed"),
+        ("reverted", "invented bodies rejected"),
+        ("stubs_left", "stubs left"),
+    ):
+        if count := sum(c[key] for c in checks):
+            parts.append(f"{count} {label}")
+    return ", ".join(parts)
+
+
+def _works_cell(variant: str, answers: list[Answer]) -> tuple[str, list[str]]:
+    results = [result for a in answers if (result := works(a.files)) is not None]
+    if not results:
+        return "—", []
+    share = mean(sum(why is None for why in r.values()) / len(r) for r in results)
+    broken = [
+        f"{variant}: {'; '.join(sorted(name for name, why in r.items() if why))}"
+        for r in results
+        if any(r.values())
+    ]
+    return f"{share * 100:.0f}%", broken
+
+
+def summarise(variant: str, records: list[dict[str, Any]], input_tokens: int) -> Row:
     counter = make_counter()
-    folder = raw_path(model, "x", 0).parent
+    output = mean(
+        float(r["usage"].get("completion_tokens") or counter.count(r["content"])) for r in records
+    )
+    answers = [answer_of(variant, r["content"]) for r in records]
+    checks = [completeness(answer) for answer in answers]
+    complete = mean(len(c["checks_passed"]) / c["checks_total"] for c in checks) * 100
+    passing, broken = _works_cell(variant, answers)
+    py_total = sum(c["python_files"] for c in checks)
+    py_ok = sum(c["python_valid"] for c in checks)
+    edits = sum(c["edits"] for c in checks)
+    applied = f"{edits - sum(c['edits_failed'] for c in checks)}/{edits}" if edits else "—"
+    cut = sum(1 for r in records if r.get("finish_reason") == "length")
+    missing = [
+        f"{variant}: {', '.join(sorted({n for n, _ in CHECKS} - set(c['checks_passed'])))}"
+        for c in checks
+        if len(c["checks_passed"]) < c["checks_total"]
+    ]
+    cells = [
+        f"{output:.0f}",
+        f"{input_tokens + output:.0f}",
+        "",  # total saved: needs the original's total
+        f"{cut}/{len(records)}",
+        f"{complete:.0f}%",
+        passing,
+        f"{py_ok}/{py_total}",
+        applied,
+        _restored_cell(variant, checks),
+        f"{mean(r['seconds'] for r in records):.0f}",
+    ]
+    return Row(cells, input_tokens + output, missing, broken)
+
+
+def load_records(model: str, prompts: dict[str, str]) -> dict[str, list[dict[str, Any]]]:
     rows: dict[str, list[dict[str, Any]]] = {v: [] for v in VARIANTS}
-    prompts = {v: prompt_for(v) for v in VARIANTS}
-    for path in sorted(folder.glob("*.json")):
+    for path in sorted(raw_path(model, "x", 0).parent.glob("*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         variant = record.get("variant")
         if variant in rows:
             record["current"] = record.get("prompt_sha256") == prompt_hash(prompts[variant])
             rows[variant].append(record)
+    return rows
+
+
+def report(model: str) -> None:
+    counter = make_counter()
+    prompts = {v: prompt_for(v) for v in VARIANTS}
+    rows = load_records(model, prompts)
     inputs = {v: counter.count(prompts[v]) for v in VARIANTS}
     efforts = sorted(
         {r.get("reasoning", DEFAULT_REASONING) for records in rows.values() for r in records}
@@ -457,48 +583,24 @@ def report(model: str) -> None:
         " Output tokens: as counted by the provider (mean over runs).",
         "",
         "| Context | Input | Input saved | Output | Total | Total saved | Cut off | Complete"
-        " | Python parses | Edits applied | Restored | Time, s |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        " | Works | Python parses | Edits applied | Restored | Time, s |",
+        "| --- " + "| ---: " * 12 + "|",
     ]
     base_total = 0.0
+    missing: list[str] = []
+    broken: list[str] = []
     for variant in VARIANTS:
         records = rows[variant]
         if not records:
             continue
         label = variant if all(r["current"] for r in records) else f"{variant} (stale)"
-        outputs = [
-            float(r["usage"].get("completion_tokens") or counter.count(r["content"]))
-            for r in records
-        ]
-        output = mean(outputs)
-        total = inputs[variant] + output
-        base_total = base_total or (total if variant == "original" else 0.0)
-        checks = [completeness(answer_of(variant, r["content"])) for r in records]
-        complete = mean(c["checks_passed"].__len__() / c["checks_total"] for c in checks) * 100
-        py_total = sum(c["python_files"] for c in checks)
-        py_ok = sum(c["python_valid"] for c in checks)
-        edits = sum(c["edits"] for c in checks)
-        applied = f"{edits - sum(c['edits_failed'] for c in checks)}/{edits}" if edits else "—"
-        restored = "—"
-        if "+lazy" in variant or "+dedent" in variant:
-            restored = f"{sum(c['restored'] for c in checks)} files"
-            if sum(c["restore_failed"] for c in checks):
-                restored += f", {sum(c['restore_failed'] for c in checks)} failed"
-            if sum(c["stubs_left"] for c in checks):
-                restored += f", {sum(c['stubs_left'] for c in checks)} stubs left"
-        cut = sum(1 for r in records if r.get("finish_reason") == "length")
-        lines.append(
-            f"| {label} | {inputs[variant]} | {percent(inputs[variant], inputs['original'])} | "
-            f"{output:.0f} | {total:.0f} | {percent(total, base_total)} | {cut}/{len(records)} | "
-            f"{complete:.0f}% | {py_ok}/{py_total} | {applied} | {restored} | "
-            f"{mean(r['seconds'] for r in records):.0f} |"
-        )
-    missing = [
-        f"{v}: {', '.join(sorted({n for n, _ in CHECKS} - set(c['checks_passed'])))}"
-        for v in VARIANTS
-        for c in (completeness(answer_of(v, r["content"])) for r in rows[v])
-        if len(c["checks_passed"]) < c["checks_total"]
-    ]
+        row = summarise(variant, records, inputs[variant])
+        base_total = base_total or (row.total if variant == "original" else 0.0)
+        row.cells[2] = percent(row.total, base_total)
+        cells = [label, str(inputs[variant]), percent(inputs[variant], inputs["original"])]
+        lines.append(f"| {' | '.join(cells + row.cells)} |")
+        missing += row.missing
+        broken += row.broken
     if any(not r["current"] for records in rows.values() for r in records):
         lines += [
             "",
@@ -507,6 +609,11 @@ def report(model: str) -> None:
         ]
     if missing:
         lines += ["", "## Missing parts", ""] + [f"- {item}" for item in missing]
+    if broken:
+        lines += ["", "## Failed behaviour checks (one line per answer)", ""]
+        lines += [f"- {item}" for item in broken]
+    if not functional.available():
+        lines += ["", "Works needs: pip install -r eval/requirements-generation.txt"]
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = "\n".join(lines) + "\n"
     report_path(model).write_text(out, encoding="utf-8", newline="\n")
