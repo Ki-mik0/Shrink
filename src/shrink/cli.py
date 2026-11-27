@@ -162,22 +162,28 @@ def _build_planner(
     )
 
 
-def _answer_notes(brief: bool, lazy: bool, dedent: bool) -> Document | None:
-    if not (brief or lazy or dedent):
+def _answer_notes(*, brief: bool, lazy: bool, dedent: bool, patch: bool) -> Document | None:
+    if not (brief or lazy or dedent or patch):
         return None
     from shrink.brief import notes_document
 
-    return notes_document(brief=brief, lazy=lazy, dedent=dedent)
+    return notes_document(brief=brief, lazy=lazy, dedent=dedent, patch=patch)
 
 
-def _build_compressor(
+def _build_compressor(  # noqa: PLR0917 - mirrors the options
     mode: list[str],
     translate: bool,
     languages: str | None,
     no_docs: bool = False,
     dedent: bool = False,
+    keep: str | None = None,
 ) -> Compressor:
     compressor = default_registry.create_chain(mode)
+    if keep:
+        from shrink.compressors.keep import KeepCompressor
+
+        names = frozenset(name.strip() for name in keep.split(",") if name.strip())
+        compressor = KeepCompressor(compressor, names)
     if not (translate or no_docs or dedent):
         return compressor
     from shrink.compressors.chain import ChainCompressor
@@ -307,6 +313,18 @@ def _build_compressor(
     "(no comments, docstrings or prose around code); saves output tokens.",
 )
 @click.option(
+    "--keep",
+    metavar="NAMES",
+    help="Functions to keep whole at level 3, e.g. the ones the task changes: "
+    "create_app,Store.open.",
+)
+@click.option(
+    "--patch",
+    is_flag=True,
+    help="Add a note asking for '## Patch:' blocks with only the changed definitions "
+    "of existing files; 'shrink apply' merges them. Saves output tokens.",
+)
+@click.option(
     "--lazy",
     is_flag=True,
     help="Add a note asking the model to return existing files shortened (stub bodies, "
@@ -360,6 +378,8 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
     budget: int | None,
     no_docs: bool,
     brief: bool,
+    keep: str | None,
+    patch: bool,
     lazy: bool,
     dedent: bool,
     diff: bool,
@@ -377,7 +397,7 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
       cat notes_uk.md | shrink --translate --stats
       files-to-prompt src | shrink -l 3 --query "token counting" --budget 4000
       files-to-prompt src | shrink -l 3 --brief | llm "add a /todos endpoint"
-      files-to-prompt src | shrink -l 3 --brief --lazy --dedent > context.txt
+      files-to-prompt src | shrink -l 3 --keep create_app --brief --dedent --patch
 
     \b
     Other commands:
@@ -397,11 +417,11 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
         pipeline = Pipeline(
             reader=StdinReader(),
             splitter=make_splitter(fmt, delimiter),
-            compressor=_build_compressor(mode, translate, translate_from, no_docs, dedent),
+            compressor=_build_compressor(mode, translate, translate_from, no_docs, dedent, keep),
             writer=StdoutWriter(),
             reporter=_build_reporter(stats, diff, encoding, parsed_price),
             planner=_build_planner(query, budget, encoding, bool(stats or diff)),
-            trailer=_answer_notes(brief, lazy, dedent),
+            trailer=_answer_notes(brief=brief, lazy=lazy, dedent=dedent, patch=patch),
         )
         pipeline.run(level)
     except KeyboardInterrupt:

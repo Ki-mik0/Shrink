@@ -60,10 +60,13 @@ class Report:
     kept: int = 0  # parts left out of the answer and taken from the file
     bodies: int = 0  # stub bodies filled in from the file
     unresolved: list[str] = field(default_factory=list)  # stubs with nothing to fill in
+    #: functions the model only saw as stubs but answered with another body; the
+    #: file's own code was kept (see ``shown`` in :func:`restore`)
+    reverted: list[str] = field(default_factory=list)
 
     @property
     def restored(self) -> bool:
-        return bool(self.kept or self.bodies)
+        return bool(self.kept or self.bodies or self.reverted)
 
     def describe(self) -> str:
         parts = []
@@ -75,6 +78,10 @@ class Report:
             parts.append(f"{self.kept} kept")
         if self.bodies:
             parts.append(f"{self.bodies} bodies restored")
+        if self.reverted:
+            parts.append(
+                f"{len(self.reverted)} invented bodies rejected: {', '.join(self.reverted)}"
+            )
         if self.unresolved:
             parts.append(f"{len(self.unresolved)} left as stubs: {', '.join(self.unresolved)}")
         return ", ".join(parts)
@@ -133,14 +140,17 @@ def merge_items(
     answer: list[Item],
     report: Report,
     combine: Callable[[Item, Item], str] | None = None,
+    *,
+    partial: bool = False,
 ) -> str | None:
     """The merged text, or ``None`` when the answer has no gap (it is the whole file).
+    With ``partial`` the answer only ever adds to and replaces parts of the file.
 
     Answer items replace the original items they match; new ones go next to their
     neighbours in the answer (after the previous matched item, or before the next
     one, or at the end of the gap they follow); everything else is kept.
     """
-    if not any(item.gap for item in answer):
+    if not partial and not any(item.gap for item in answer):
         return None
     matches = _match(orig, answer)
     replace: dict[int, str] = {}
@@ -157,7 +167,11 @@ def merge_items(
             continue
         report.inserted += 1
         text = _spaced(item.text, _usual_gap(orig))
-        slots[_slot(answer, matches, j, header_end, bool(orig))].append(text)
+        if partial and not item.header:
+            slot = _patch_slot(orig, matches, j)
+        else:
+            slot = _slot(answer, matches, j, header_end, bool(orig))
+        slots[slot].append(text)
     pieces: list[str] = []
     for i, old in enumerate(orig):
         pieces.extend(slots.get(("before", i), []))
@@ -167,6 +181,16 @@ def merge_items(
         pieces.extend(slots.get(("after", i), []))
     pieces.extend(slots.get(("end", -1), []))
     return _join(pieces)
+
+
+def _patch_slot(orig: list[Item], matches: list[int | None], j: int) -> tuple[str, int]:
+    """A new definition in a patch goes after the definition it follows, otherwise
+    to the end: placed after an import it could use names defined further down."""
+    for k in range(j - 1, -1, -1):
+        hit = matches[k]
+        if hit is not None:
+            return ("end", -1) if orig[hit].header else ("after", hit)
+    return "end", -1
 
 
 def _slot(
@@ -247,9 +271,7 @@ def _keep_lead(old: str, new: str) -> str:
         return new
     old_lead, _ = _lead(old)
     new_lead, body = _lead(new)
-    if new_lead.strip() or not old_lead.strip():
-        return new
-    return old_lead + body
+    return new if new_lead.strip() else old_lead + body
 
 
 def _usual_gap(orig: list[Item]) -> int:
@@ -480,6 +502,7 @@ class _PyMerge:
     answer: _PySource
     views: Views
     report: Report
+    partial: bool = False
 
     def module(self) -> str:
         orig_items = _py_items(self.orig, self.orig.tree.body, 0, len(self.orig.text))
@@ -492,9 +515,11 @@ class _PyMerge:
                 return old.text  # unchanged from what the model was shown
             if isinstance(old.node, ast.ClassDef) and isinstance(new.node, ast.ClassDef):
                 return self._class(old, new, prefix)
+            if self.partial and isinstance(old.node, ast.ImportFrom):
+                return _join_imports(old, new)
             return new.text
 
-        merged = merge_items(orig_items, ans_items, self.report, combine)
+        merged = merge_items(orig_items, ans_items, self.report, combine, partial=self.partial)
         if merged is None:
             merged = whole_items(orig_items, ans_items, self.report, combine)
         return merged
@@ -529,6 +554,69 @@ class _PyMerge:
         for item in ans_items:  # a class docstring is a member like any other
             item.header = False
         return header + self._body(shifted, ans_items, path)
+
+
+def _join_imports(old: Item, new: Item) -> str:
+    """``from m import a`` patched with ``from m import b`` imports both."""
+    assert isinstance(old.node, ast.ImportFrom) and isinstance(new.node, ast.ImportFrom)
+    names = {(a.name, a.asname) for a in [*old.node.names, *new.node.names]}
+    if names == {(a.name, a.asname) for a in old.node.names}:
+        return old.text
+    listed = ", ".join(f"{n} as {a}" if a else n for n, a in sorted(names, key=lambda x: x[0]))
+    lead, _ = _lead(old.text)
+    return f"{lead}from {'.' * old.node.level}{old.node.module or ''} import {listed}\n"
+
+
+def _code_of(func: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """The function's syntax tree without its docstring: what it does."""
+    body = func.body[1:] if _is_docstring(func.body[0]) else func.body
+    parts: list[ast.AST] = [func.args, *func.decorator_list, *body]
+    return "|".join(ast.dump(part) for part in parts)
+
+
+def _reject_python(original: str, text: str, shown: str, report: Report) -> str:
+    """Put the file's own code back wherever ``text`` rewrites a function that
+    ``shown`` (the model's view) had as a stub: the model never saw that code."""
+    try:
+        orig, merged = _PySource(original), _PySource(text)
+    except SyntaxError:
+        return text  # not Python before the change: nothing was shown as a skeleton
+    try:
+        view = _PySource(shown)
+    except SyntaxError as exc:
+        raise RestoreError(
+            f"the file's text in the context is not valid Python (line {exc.lineno}), "
+            "so the answer cannot be checked against what the model saw"
+        ) from None
+    hidden = {name for name, func in _functions(view).items() if _stub_body(func)}
+    originals, results = _functions(orig), _functions(merged)
+    edits: list[tuple[int, int, str]] = []
+    for name in sorted(hidden & originals.keys() & results.keys()):
+        source, func = originals[name], results[name]
+        if _code_of(source) == _code_of(func):
+            continue
+        assert source.end_lineno is not None and func.end_lineno is not None
+        first = _first_row(source)
+        block = orig.text[orig.line_start(first) : orig.line_end(source.end_lineno)]
+        if not block.endswith("\n"):
+            block += "\n"
+        row = _first_row(func)
+        block = _shift(orig, block, first, merged.indent_of(row) - orig.indent_of(first))
+        edits.append((merged.line_start(row), merged.line_end(func.end_lineno), block))
+        report.reverted.append(name)
+    return _splice(text, edits)
+
+
+def _splice(text: str, edits: list[tuple[int, int, str]]) -> str:
+    out: list[str] = []
+    pos = 0
+    for start, end, replacement in sorted(edits):
+        if start < pos:
+            continue  # inside a part already replaced
+        out += [text[pos:start], replacement]
+        pos = end
+    out.append(text[pos:])
+    return "".join(out)
 
 
 def _functions(src: _PySource) -> dict[str, ast.FunctionDef | ast.AsyncFunctionDef]:
@@ -598,7 +686,11 @@ def _fill_python_stubs(orig: _PySource | None, text: str, report: Report) -> str
 
 
 def restore_python(
-    original: str | None, answer: str, report: Report, views: list[str] | None = None
+    original: str | None,
+    answer: str,
+    report: Report,
+    views: list[str] | None = None,
+    partial: bool = False,
 ) -> str:
     try:
         ans = _PySource(answer)
@@ -614,7 +706,7 @@ def restore_python(
             orig = None
     text = answer
     if orig is not None:
-        text = _PyMerge(orig, ans, _py_index(views or [orig.text]), report).module()
+        text = _PyMerge(orig, ans, _py_index(views or [orig.text]), report, partial).module()
     text = _fill_python_stubs(orig, text, report)
     try:
         ast.parse(text)
@@ -741,6 +833,33 @@ def _fill_js_stubs(
     return "".join(out)
 
 
+def _js_code(body: str) -> list[tuple[str, str]]:
+    return [(kind, token) for kind, token, _ in web._signature(web.lex_js(body))]
+
+
+def _reject_js(original: str, text: str, shown: str, report: Report) -> str:
+    """:func:`_reject_python` for the ``{/* ... */}`` bodies of JavaScript."""
+    try:
+        hidden = {key for key, s, e in _js_bodies(shown) if _norm(shown[s + 1 : e - 1]) == _STUB_JS}
+        originals = {key: original[s:e] for key, s, e in _js_bodies(original)}
+        results = _js_bodies(text)
+    except web.LexError:
+        return text
+    edits: list[tuple[int, int, str]] = []
+    done = 0
+    for key, start, end in results:
+        if start < done or key not in hidden or key not in originals:
+            continue
+        if _js_code(text[start:end]) == _js_code(originals[key]):
+            continue
+        line_start = text.rfind("\n", 0, start) + 1
+        here = len(text[line_start:start]) - len(text[line_start:start].lstrip(" \t"))
+        edits.append((start, end, _reindent_block(originals[key], here, original)))
+        report.reverted.append(key)
+        done = end
+    return _splice(text, edits)
+
+
 def _reindent_block(body: str, target: int, orig_text: str | None) -> str:
     """Shift the lines after the first of a ``{...}`` body so its closing brace
     lines up with the line it now starts on."""
@@ -837,7 +956,11 @@ def _js_key(text: str) -> tuple[str | None, bool]:
 
 
 def restore_js(
-    original: str | None, answer: str, report: Report, views: list[str] | None = None
+    original: str | None,
+    answer: str,
+    report: Report,
+    views: list[str] | None = None,
+    partial: bool = False,
 ) -> str:
     try:
         ans_items = _js_items(answer)
@@ -857,7 +980,7 @@ def restore_js(
             return old.text if _seen(index, (), new) else new.text
 
         if orig_items:
-            merged = merge_items(orig_items, ans_items, report, combine)
+            merged = merge_items(orig_items, ans_items, report, combine, partial=partial)
             text = (
                 merged
                 if merged is not None
@@ -949,7 +1072,11 @@ def _place(fragment: str, pad: str) -> str:
 
 
 def restore_html(
-    original: str | None, answer: str, report: Report, views: list[str] | None = None
+    original: str | None,
+    answer: str,
+    report: Report,
+    views: list[str] | None = None,
+    partial: bool = False,  # a fragment is merged by element either way
 ) -> str:
     text = answer
     if original is not None:
@@ -1097,7 +1224,11 @@ def _css_item(text: str, _start: int, _src: str) -> Item:
 
 
 def restore_css(
-    original: str | None, answer: str, report: Report, views: list[str] | None = None
+    original: str | None,
+    answer: str,
+    report: Report,
+    views: list[str] | None = None,
+    partial: bool = False,
 ) -> str:
     if original is None:
         return answer
@@ -1120,20 +1251,93 @@ def restore_css(
             return old.text
         return new.text
 
-    merged = merge_items(orig_items, ans_items, report, combine)
+    merged = merge_items(orig_items, ans_items, report, combine, partial=partial)
     return merged if merged is not None else whole_items(orig_items, ans_items, report, combine)
+
+
+# ------------------------------------------------------------------ fragments
+
+
+def is_fragment(block: str, path: str) -> bool:
+    """A patch block of lines from inside a function: Python or JavaScript whose
+    first line is indented (top-level definitions start at the left edge)."""
+    if indent.kind_of(path) not in ("python", "js"):
+        return False
+    first = next((line for line in block.splitlines() if line.strip()), "")
+    return first[:1] in (" ", "\t")
+
+
+def _width(line: str) -> int:
+    return len(line) - len(line.lstrip(" \t"))
+
+
+def insert_fragment(original: str, block: str) -> str:
+    """Put the new lines of ``block`` into ``original`` next to the lines it
+    shares with it (anchors), as models write "add these lines here":
+
+        app.include_router(health.router)     <- already in the file: anchor
+        app.include_router(auth.router)       <- new, goes after the anchor
+
+    An anchor must occur exactly once in the file. New lines keep their depth
+    relative to the anchor, in the file's own indentation step.
+    """
+    lines = original.splitlines(keepends=True)
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
+    where: dict[str, list[int]] = defaultdict(list)
+    for number, line in enumerate(lines):
+        where[line.strip()].append(number)
+    rows = [line for line in block.splitlines() if line.strip()]
+    anchors = {
+        k: where[row.strip()][0] for k, row in enumerate(rows) if len(where[row.strip()]) == 1
+    }
+    if not anchors:
+        raise RestoreError("no line of the patch block matches the file, so it has no place")
+    widths = sorted({_width(row) for row in rows} | {_width(lines[i]) for i in anchors.values()})
+    step = min((b - a for a, b in itertools.pairwise(widths) if b > a), default=1)
+    unit = indent.detect_unit(original, "python") or step
+    inserts: dict[int, list[str]] = defaultdict(list)  # after original line number
+    for k, row in enumerate(rows):
+        if k in anchors:
+            continue
+        before = [j for j in anchors if j < k]
+        after = [j for j in anchors if j > k]
+        anchor = max(before) if before else min(after)
+        line_no = anchors[anchor] if before else anchors[anchor] - 1
+        depth = round((_width(row) - _width(rows[anchor])) / step)
+        pad = max(_width(lines[anchors[anchor]]) + depth * unit, 0)
+        inserts[line_no].append(" " * pad + row.strip() + "\n")
+    out = list(inserts.get(-1, []))
+    for number, line in enumerate(lines):
+        out.append(line)
+        out += inserts.get(number, [])
+    return "".join(out)
 
 
 # ------------------------------------------------------------------ entry point
 
 _RESTORERS = {"python": restore_python, "js": restore_js, "html": restore_html, "css": restore_css}
+_REJECTORS = {"python": _reject_python, "js": _reject_js}
 
 
-def restore(original: str | None, answer: str, path: str) -> Restored:
+def restore(
+    original: str | None,
+    answer: str,
+    path: str,
+    *,
+    partial: bool = False,
+    shown: str | None = None,
+) -> Restored:
     """Merge a (possibly shortened) answer for ``path`` with the file's current text.
 
     The answer's indentation is first given back its usual width (see
     :mod:`shrink.indent`), matching the original file when there is one.
+
+    ``partial``: the answer is a patch; it replaces and adds definitions and never
+    removes one. ``shown``: the text of this file the model was given. Then nothing
+    is removed either, and a function it saw only as a stub keeps the file's own
+    code even if the answer has a body for it, because that body can only be a
+    guess. To let the model change a function, show it (``shrink --keep``).
     """
     report = Report(path)
     kind = indent.kind_of(path)
@@ -1150,7 +1354,10 @@ def restore(original: str | None, answer: str, path: str) -> Restored:
     else:
         restorer = _RESTORERS.get(kind or "")
         if restorer is not None:
-            text = restorer(original, text, report, views)
+            text = restorer(original, text, report, views, partial or shown is not None)
+        rejector = _REJECTORS.get(kind or "")
+        if rejector is not None and shown is not None and original is not None:
+            text = rejector(original, text, shown, report)
     if original is None:
         report.status = "new"
     else:

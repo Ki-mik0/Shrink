@@ -335,3 +335,105 @@ def test_other_files_are_taken_as_they_are() -> None:
     assert result.text == "new\n"
     assert result.report.status == "changed"
     assert Report("x").describe() == ""
+
+
+# ---------------------------------------------------------------- patches
+
+
+def test_patch_replaces_and_adds_without_removing() -> None:
+    patch = (
+        "from sqlite3 import Row\n\n\n"
+        "def audit(conn: sqlite3.Connection, event: str) -> None:\n    print(event)\n\n\n"
+        "def extra() -> None:\n    pass\n"
+    )
+    result = restore(DB, patch, "db.py", partial=True)
+    assert "def connect" in result.text and "class Store" in result.text
+    assert "    print(event)\n" in result.text
+    assert result.text.rstrip().endswith("def extra() -> None:\n    pass")
+    assert result.text.index("from sqlite3 import Row") < result.text.index("MIGRATIONS")
+    ast.parse(result.text)
+
+
+def test_patched_from_import_keeps_the_old_names() -> None:
+    original = "from app.routers import health\n\nx = health\n"
+    result = restore(original, "from app.routers import auth\n", "m.py", partial=True)
+    assert result.text == "from app.routers import auth, health\n\nx = health\n"
+    same = restore(original, "from app.routers import health\n", "m.py", partial=True)
+    assert same.report.status == "unchanged"
+
+
+def test_patched_new_definition_is_not_placed_among_the_imports() -> None:
+    original = "import os\n\nrouter = object()\n"
+    patch = "import os\n\n\ndef late():\n    return router\n"
+    text = restore(original, patch, "m.py", partial=True).text
+    assert text.index("router = object()") < text.index("def late")
+
+
+def test_patched_class_keeps_its_other_members() -> None:
+    patch = "class Store:\n    def close(self) -> None:\n        self.path = ''\n"
+    text = restore(DB, patch, "db.py", partial=True).text
+    assert "def open" in text and "def close" in text and "def __init__" in text
+    ast.parse(text)
+
+
+INVENTED = """\
+def connect(path: str) -> sqlite3.Connection:
+    return sqlite3.connect(path, timeout=1)
+
+
+class Store:
+    def open(self) -> sqlite3.Connection:
+        return sqlite3.connect(self.path)
+"""
+
+
+def test_bodies_the_model_never_saw_are_rejected() -> None:
+    result = restore(DB, INVENTED, "db.py", shown=view(DB, "db.py"))
+    assert result.text == DB
+    assert sorted(result.report.reverted) == ["Store.open", "connect"]
+    assert "invented bodies rejected: Store.open, connect" in result.report.describe()
+
+
+def test_without_the_view_the_rewrite_is_taken() -> None:
+    assert "timeout=1" in restore(DB, INVENTED, "db.py", partial=True).text
+
+
+def test_a_kept_function_may_be_changed() -> None:
+    kept = Document(DB, path="db.py", keep=frozenset({"connect"}))
+    shown = AutoCompressor().compress(kept, 3).text
+    result = restore(DB, INVENTED, "db.py", shown=shown)
+    assert "timeout=1" in result.text
+    assert result.report.reverted == ["Store.open"]
+
+
+def test_guard_never_removes_and_ignores_unchanged_bodies() -> None:
+    whole = view(DB, "db.py").split("\n\nclass Store")[0] + "\n"
+    result = restore(DB, whole, "db.py", shown=view(DB, "db.py"))
+    assert result.text == DB
+    assert result.report.reverted == []
+    # a view that cannot be read must not silently switch the guard off
+    with pytest.raises(RestoreError, match="cannot be checked"):
+        restore(DB, INVENTED, "db.py", shown="def (:")
+
+
+def test_js_bodies_the_model_never_saw_are_rejected() -> None:
+    invented = "export function saveToken(token) {\n  sessionStorage.x = token;\n}\n"
+    result = restore(JS, invented, "api.js", shown=view(JS, "api.js"))
+    assert "localStorage.setItem(TOKEN_KEY, token);" in result.text
+    assert "sessionStorage" not in result.text
+    assert result.report.reverted == ["saveToken"]
+    assert "export const load" in result.text
+
+
+def test_fragment_keeps_relative_depth_and_inserts_before_an_anchor() -> None:
+    from shrink.restore import insert_fragment, is_fragment
+
+    original = "def f(x):\n    if x:\n        go()\n    return x\n"
+    block = " if x:\n  go()\n  log(x)\n return x\n"
+    assert is_fragment(block, "a.py") and not is_fragment("def g(): ...", "a.py")
+    assert not is_fragment(block, "a.html")
+    assert insert_fragment(original, block) == (
+        "def f(x):\n    if x:\n        go()\n        log(x)\n    return x\n"
+    )
+    first = " setup()\n return x\n"
+    assert insert_fragment(original, first).endswith("    setup()\n    return x\n")

@@ -8,9 +8,25 @@ import pytest
 from click.testing import CliRunner
 
 from shrink import cli as cli_module
-from shrink.apply import answer_files, apply_answer, command, safe_target
-from shrink.brief import BRIEF_NOTE, DEDENT_NOTE, LAZY_NOTE, answer_notes, notes_document
+from shrink.apply import (
+    answer_files,
+    answer_sections,
+    apply_answer,
+    command,
+    context_files,
+    safe_target,
+)
+from shrink.brief import (
+    BRIEF_NOTE,
+    DEDENT_NOTE,
+    LAZY_NOTE,
+    PATCH_NOTE,
+    answer_notes,
+    notes_document,
+)
 from shrink.cli import cli
+from shrink.compressors.keep import KeepCompressor
+from shrink.document import Document
 
 FENCE = "`" * 3
 MAIN = '''\
@@ -160,3 +176,106 @@ def test_filter_lazy_and_dedent(runner: CliRunner) -> None:
     assert result.stdout.endswith(DEDENT_NOTE + LAZY_NOTE)
     assert "dedent" in result.stderr
     assert "answer notes" in result.stderr
+
+
+PATCH = f"""\
+## Patch: app/main.py
+{FENCE}python
+from app.routers import auth
+
+def create_app():
+ return auth
+{FENCE}
+
+## Patch: app/main.py
+{FENCE}python
+def build():
+ return "invented"
+{FENCE}
+"""
+
+
+def test_answer_sections_patches_and_glued_fences() -> None:
+    glued = f"## File: a.html\n{FENCE}html<!doctype html>\n<p></p>\n{FENCE}\n"
+    assert answer_sections(glued)[0].content == "<!doctype html>\n<p></p>\n"
+    sections = answer_sections(PATCH)
+    assert [(s.path, s.partial) for s in sections] == [("app/main.py", True)] * 2
+
+
+def test_apply_with_context_keeps_what_the_model_never_saw(
+    repo: Path, runner: CliRunner, tmp_path: Path
+) -> None:
+    packed = f"app/main.py\n---\n{MAIN}---\n"
+    context = runner.invoke(cli, ["-l", "3", "--keep", "create_app", "--patch"], input=packed)
+    assert context.exit_code == 0
+    assert "app.include_router(health.router)" in context.stdout  # kept
+    assert "def build():\n    ...\n" in context.stdout
+    assert context.stdout.endswith(PATCH_NOTE)
+    shown = tmp_path / "context.txt"
+    shown.write_text(context.stdout, encoding="utf-8")
+
+    result = runner.invoke(command, ["--root", str(repo), "--context", str(shown)], input=PATCH)
+    assert result.exit_code == 0
+    assert "the model never saw the code of app/main.py:build" in result.stderr
+    main = (repo / "app" / "main.py").read_text(encoding="utf-8")
+    assert "def create_app():\n    return auth\n" in main
+    assert "def build():\n    return create_app()\n" in main
+    assert "from app.routers import auth, health\n" in main
+
+
+def test_context_files_reads_the_packed_context() -> None:
+    assert context_files("a.py\n---\nx = 1\n---\n") == {"a.py": "x = 1\n"}
+    noted = "a.py\n---\nx = 1\n---\n" + PATCH_NOTE
+    assert context_files(noted) == {"a.py": "x = 1\n"}
+    assert context_files("plain text\n") == {}
+
+
+def test_a_broken_patch_is_reported(repo: Path) -> None:
+    bad = f"## Patch: app/main.py\n{FENCE}python\ndef (:\n{FENCE}\n"
+    reports, errors = apply_answer(bad, repo)
+    assert reports == [] and "not valid Python" in errors[0]
+
+
+def test_keep_wraps_compressors_without_steps() -> None:
+    class Plain:
+        name = summary = help = "plain"
+
+        def compress(self, doc: Document, level: int) -> Document:
+            return doc.with_text(",".join(sorted(doc.keep)))
+
+    keep = KeepCompressor(Plain(), frozenset({"b", "a"}))
+    assert keep.compress(Document("x"), 3).text == "a,b"
+    assert keep.trace(Document("x"), 3)[0].after.text == "a,b"
+
+
+TWO_BLOCKS = f"""\
+## Patch: app/main.py
+{FENCE}python
+from app.routers import auth, health
+{FENCE}
+
+{FENCE}python
+ app = make()
+ app.include_router(health.router)
+ app.include_router(auth.router)
+{FENCE}
+"""
+
+
+def test_patch_with_lines_for_inside_a_function(repo: Path) -> None:
+    sections = answer_sections(TWO_BLOCKS)
+    assert [s.partial for s in sections] == [True, True]
+    _, errors = apply_answer(TWO_BLOCKS, repo)
+    assert errors == []
+    main = (repo / "app" / "main.py").read_text(encoding="utf-8")
+    assert (
+        "    app.include_router(health.router)\n    app.include_router(auth.router)\n    return app"
+    ) in main
+    assert main.count("app = make()") == 1
+    assert "from app.routers import auth, health\n" in main
+
+
+def test_fragment_without_an_anchor_fails(repo: Path) -> None:
+    lost = f"## Patch: app/main.py\n{FENCE}python\n    print('where?')\n{FENCE}\n"
+    reports, errors = apply_answer(lost, repo)
+    assert reports == [] and "has no place" in errors[0]

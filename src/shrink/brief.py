@@ -8,6 +8,8 @@ lot (code generation), most of the tokens are in the answer:
 * ``--lazy`` (:data:`LAZY_NOTE`): an existing file comes back the way the model
   saw it, with stub bodies and ``...`` gaps for what did not change;
   ``shrink apply`` fills them in from the repository (:mod:`shrink.restore`).
+* ``--patch`` (:data:`PATCH_NOTE`): for an existing file only the definitions
+  added or changed, as ``## Patch:``; ``shrink apply`` merges them by name.
 * ``--dedent`` (:data:`DEDENT_NOTE`): code in the compact layout of the context
   (Python with one space per level, JavaScript/HTML/CSS without indentation);
   ``shrink apply`` re-indents it (:mod:`shrink.indent`).
@@ -41,6 +43,15 @@ LAZY_NOTE = (
     "repository by name (HTML elements by id). Write new code in full.]\n"
 )
 
+PATCH_NOTE = (
+    "\n[Exception to the answer format above, to save tokens: for a file that already "
+    "exists, write `## Patch: <path>` instead of `## File:` and give only the top-level "
+    "definitions you add or change (imports, variables, functions, classes; in HTML the "
+    "changed elements), each one whole. Everything else stays as it is. Never write a "
+    "body shown to you as `...`. New files stay `## File:`, and each file holds its own "
+    "code: never inline it in another file.]\n"
+)
+
 DEDENT_NOTE = (
     "\n[Write code in the layout of the files above, to save tokens: Python indented "
     "with one space per level; JavaScript, HTML and CSS without indentation. It is "
@@ -64,19 +75,23 @@ def brief_document() -> Document:
     return Document(BRIEF_NOTE, path=BRIEF_PATH)
 
 
-def answer_notes(*, brief: bool = False, lazy: bool = False, dedent: bool = False) -> str:
+def answer_notes(
+    *, brief: bool = False, lazy: bool = False, dedent: bool = False, patch: bool = False
+) -> str:
     """The notes asked for, in a fixed order."""
-    return (
-        (BRIEF_NOTE if brief else "")
-        + (DEDENT_NOTE if dedent else "")
-        + (LAZY_NOTE if lazy else "")
-    )
+    chosen = [
+        (brief, BRIEF_NOTE),
+        (dedent, DEDENT_NOTE),
+        (lazy, LAZY_NOTE),
+        (patch, PATCH_NOTE),
+    ]
+    return "".join(note for wanted, note in chosen if wanted)
 
 
 def notes_document(
-    *, brief: bool = False, lazy: bool = False, dedent: bool = False
+    *, brief: bool = False, lazy: bool = False, dedent: bool = False, patch: bool = False
 ) -> Document | None:
-    text = answer_notes(brief=brief, lazy=lazy, dedent=dedent)
+    text = answer_notes(brief=brief, lazy=lazy, dedent=dedent, patch=patch)
     if not text:
         return None
     return Document(text, path=BRIEF_PATH if text == BRIEF_NOTE else NOTE_PATH)
