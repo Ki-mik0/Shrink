@@ -58,7 +58,7 @@ class Pipeline:
         self._writer = writer
         self._reporter = reporter
         self._planner = planner
-        self._trailer = trailer  # written after the last document (--brief)
+        self._trailer = trailer  # written after the last document (--brief, --lazy, --dedent)
         self._warn = warn
         self._warned: set[str] = set()
 
@@ -80,7 +80,11 @@ class Pipeline:
             self._writer.write(self._trailer)
             if self._reporter is not None:
                 empty = Document("", path=self._trailer.path)
-                self._reporter.record(empty, self._trailer, [Step("brief note", self._trailer)])
+                self._reporter.record(
+                    empty,
+                    self._trailer,
+                    [Step((self._trailer.path or "notes").strip("()"), self._trailer)],
+                )
         if self._reporter is not None:
             self._reporter.finish()
         return count

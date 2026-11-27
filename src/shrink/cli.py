@@ -36,7 +36,7 @@ EXIT_USAGE = 2
 EXIT_INTERRUPTED = 130
 
 DEFAULT_MODE = "auto"
-SUBCOMMANDS = ("wrap", "gain")
+SUBCOMMANDS = ("wrap", "gain", "apply")
 
 _LEVEL_HELP = ", ".join(f"{n} {name}" for n, name in LEVEL_NAMES.items())
 
@@ -162,17 +162,23 @@ def _build_planner(
     )
 
 
-def _brief_note() -> Document:
-    from shrink.brief import brief_document
+def _answer_notes(brief: bool, lazy: bool, dedent: bool) -> Document | None:
+    if not (brief or lazy or dedent):
+        return None
+    from shrink.brief import notes_document
 
-    return brief_document()
+    return notes_document(brief=brief, lazy=lazy, dedent=dedent)
 
 
 def _build_compressor(
-    mode: list[str], translate: bool, languages: str | None, no_docs: bool = False
+    mode: list[str],
+    translate: bool,
+    languages: str | None,
+    no_docs: bool = False,
+    dedent: bool = False,
 ) -> Compressor:
     compressor = default_registry.create_chain(mode)
-    if not (translate or no_docs):
+    if not (translate or no_docs or dedent):
         return compressor
     from shrink.compressors.chain import ChainCompressor
 
@@ -186,6 +192,10 @@ def _build_compressor(
 
         only = frozenset(code.strip() for code in languages.split(",")) if languages else None
         members.append(TranslateCompressor(only=only))
+    if dedent:
+        from shrink.compressors.dedent import DedentCompressor
+
+        members.append(DedentCompressor())
     return ChainCompressor(members)
 
 
@@ -297,6 +307,18 @@ def _build_compressor(
     "(no comments, docstrings or prose around code); saves output tokens.",
 )
 @click.option(
+    "--lazy",
+    is_flag=True,
+    help="Add a note asking the model to return existing files shortened (stub bodies, "
+    "'...' for unchanged parts); 'shrink apply' fills them in. Saves output tokens.",
+)
+@click.option(
+    "--dedent",
+    is_flag=True,
+    help="Indent Python with one space per level and drop indentation in JS/HTML/CSS, "
+    "and ask the model to answer that way; 'shrink apply' re-indents the answer.",
+)
+@click.option(
     "--diff",
     is_flag=True,
     help="Print a unified diff of every file to stderr, then the --stats report.",
@@ -338,6 +360,8 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
     budget: int | None,
     no_docs: bool,
     brief: bool,
+    lazy: bool,
+    dedent: bool,
     diff: bool,
     debug: bool,
 ) -> None:
@@ -353,11 +377,13 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
       cat notes_uk.md | shrink --translate --stats
       files-to-prompt src | shrink -l 3 --query "token counting" --budget 4000
       files-to-prompt src | shrink -l 3 --brief | llm "add a /todos endpoint"
+      files-to-prompt src | shrink -l 3 --brief --lazy --dedent > context.txt
 
     \b
     Other commands:
       shrink wrap claude    run an agent through the compressing proxy
       shrink gain           what shrink wrap has saved so far
+      shrink apply ANSWER   write a model's answer, filling in what --lazy left out
     """
     if download is not None:
         _download(download, encoding)
@@ -371,11 +397,11 @@ def cli(  # noqa: PLR0917 - one parameter per Click option
         pipeline = Pipeline(
             reader=StdinReader(),
             splitter=make_splitter(fmt, delimiter),
-            compressor=_build_compressor(mode, translate, translate_from, no_docs),
+            compressor=_build_compressor(mode, translate, translate_from, no_docs, dedent),
             writer=StdoutWriter(),
             reporter=_build_reporter(stats, diff, encoding, parsed_price),
             planner=_build_planner(query, budget, encoding, bool(stats or diff)),
-            trailer=_brief_note() if brief else None,
+            trailer=_answer_notes(brief, lazy, dedent),
         )
         pipeline.run(level)
     except KeyboardInterrupt:
@@ -402,11 +428,16 @@ def _configure_stderr() -> None:
 def main(argv: list[str] | None = None) -> int:
     """Console entry point; returns the process exit code.
 
-    ``shrink wrap ...`` and ``shrink gain`` are separate commands; everything else
-    is the filter (it takes no positional arguments, so the two never clash).
+    ``shrink wrap ...``, ``shrink gain`` and ``shrink apply`` are separate commands;
+    everything else is the filter (it takes no positional arguments, so they never
+    clash).
     """
     _configure_stderr()
     args = sys.argv[1:] if argv is None else argv
+    if args and args[0] == "apply":
+        from shrink.apply import run as run_apply
+
+        return run_apply(args[1:])
     if args and args[0] in SUBCOMMANDS:
         from shrink.integrations.commands import run
 

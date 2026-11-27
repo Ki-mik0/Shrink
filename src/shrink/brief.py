@@ -1,15 +1,24 @@
-"""``--brief``: a short note after the context asking the model for a terse answer.
+"""Notes after the context that make the model's answer shorter.
 
 Compression only shrinks what the model reads. In tasks where the model writes a
-lot (code generation), most of the tokens are in the answer, and a large part of
-them is prose around the code, comments and docstrings, and files repeated
-without changes, or rewritten after it was already given. The note asks the
-model to leave those out; it costs about 60 tokens of input once.
+lot (code generation), most of the tokens are in the answer:
 
-:data:`EDITS_NOTE` is an experiment for the end of a prompt (where an agent
-proxy could add it): give existing files as SEARCH/REPLACE edits instead of
-whole copies; :mod:`shrink.edits` applies them. Placed before the task, the
-model ignored it in favour of the task's own "return every file in full".
+* ``--brief`` (:data:`BRIEF_NOTE`): no prose around the code, no comments or
+  docstrings, no files repeated without changes. About 60 tokens of input.
+* ``--lazy`` (:data:`LAZY_NOTE`): an existing file comes back the way the model
+  saw it, with stub bodies and ``...`` gaps for what did not change;
+  ``shrink apply`` fills them in from the repository (:mod:`shrink.restore`).
+* ``--dedent`` (:data:`DEDENT_NOTE`): code in the compact layout of the context
+  (Python with one space per level, JavaScript/HTML/CSS without indentation);
+  ``shrink apply`` re-indents it (:mod:`shrink.indent`).
+
+The notes come after the context; a format the task itself demands ("return
+every file in full") wins over a note placed before it, so the lazy and dedent
+notes say that they are an exception to such a rule.
+
+:data:`EDITS_NOTE` is an earlier experiment kept for the eval: SEARCH/REPLACE
+edits. At level 3 the model copies the shortened view into SEARCH, so the edits
+do not apply; :data:`LAZY_NOTE` matches by name instead.
 """
 
 from __future__ import annotations
@@ -23,6 +32,21 @@ BRIEF_NOTE = (
     "rewrite a file you already gave. Keep every required feature.]\n"
 )
 
+LAZY_NOTE = (
+    "\n[To save tokens, even where complete files are asked for: return a file that "
+    "already exists the way you were shown it, with your changes. Keep a body you do "
+    "not change as `...` (Python) or `{/* ... */}` (JavaScript), and write a line "
+    "`...` (Python), `/* ... */` (JavaScript, CSS) or `<!-- ... -->` (HTML) in place "
+    "of unchanged code you leave out. Left-out parts are filled in from the "
+    "repository by name (HTML elements by id). Write new code in full.]\n"
+)
+
+DEDENT_NOTE = (
+    "\n[Write code in the layout of the files above, to save tokens: Python indented "
+    "with one space per level; JavaScript, HTML and CSS without indentation. It is "
+    "re-indented afterwards.]\n"
+)
+
 EDITS_NOTE = (
     "\n\n[Exception to the answer format above, to save tokens: do not return a file "
     "that already exists in full. Return only its changes, as\n## Edit: <path>\n```\n"
@@ -32,8 +56,27 @@ EDITS_NOTE = (
 )
 
 BRIEF_PATH = "(brief note)"
+NOTE_PATH = "(answer notes)"
 
 
 def brief_document() -> Document:
     """The note as a document of its own, so --stats and --diff show what it costs."""
     return Document(BRIEF_NOTE, path=BRIEF_PATH)
+
+
+def answer_notes(*, brief: bool = False, lazy: bool = False, dedent: bool = False) -> str:
+    """The notes asked for, in a fixed order."""
+    return (
+        (BRIEF_NOTE if brief else "")
+        + (DEDENT_NOTE if dedent else "")
+        + (LAZY_NOTE if lazy else "")
+    )
+
+
+def notes_document(
+    *, brief: bool = False, lazy: bool = False, dedent: bool = False
+) -> Document | None:
+    text = answer_notes(brief=brief, lazy=lazy, dedent=dedent)
+    if not text:
+        return None
+    return Document(text, path=BRIEF_PATH if text == BRIEF_NOTE else NOTE_PATH)
